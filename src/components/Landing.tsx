@@ -18,9 +18,13 @@ const CONTACT = {
   whatsappAutoReplyLink: "https://wa.me/message/7UXKMTVJUTO6N1",
   instagramUrl: "https://www.instagram.com/fraganti.co",
   tiktokUrl: "https://www.tiktok.com/@fraganti.co",
-  storeAddress: "Carrera 14 #11, esquina, Barrio Pueblo Nuevo, Caucasia, Antioquia",
-  mapEmbedUrl: "https://www.google.com/maps?q=Carrera+14+%2311+Barrio+Pueblo+Nuevo+Caucasia+Antioquia+Colombia&z=18&output=embed",
-  mapLinkUrl: "https://www.google.com/maps/search/?api=1&query=Carrera+14+%2311+Barrio+Pueblo+Nuevo+Caucasia+Antioquia+Colombia",
+  storeAddress: "Cl. 11 # 14B-4, Barrio Pueblo Nuevo, Caucasia, Antioquia",
+  // z=19 para acercar el mapa a nivel de calle/cuadra, mostrando solo Caucasia
+  // (no municipios vecinos). La consulta usa el formato exacto de dirección
+  // colombiana (sin "Barrio Pueblo Nuevo") porque así Google la geocodifica
+  // directo al punto correcto en vez de dudar entre varios lugares.
+  mapEmbedUrl: "https://www.google.com/maps?q=Cl.+11+%23+14B-4,+Caucasia,+Antioquia,+Colombia&z=19&output=embed",
+  mapLinkUrl: "https://www.google.com/maps/search/?api=1&query=Cl.+11+%23+14B-4+Caucasia+Antioquia+Colombia",
 };
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -176,6 +180,19 @@ export function Landing() {
         @keyframes fade-out {
           0% { opacity: 1; visibility: visible; }
           100% { opacity: 0; visibility: hidden; }
+        }
+
+        @keyframes map-ring-pulse {
+          0% { transform: scale(0.6); opacity: 0.9; }
+          70% { transform: scale(1.6); opacity: 0; }
+          100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        .map-ring {
+          animation: map-ring-pulse 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+        }
+        .map-ring-delay {
+          animation-delay: 1.1s;
         }
         
         .loader-container {
@@ -697,13 +714,24 @@ export function Landing() {
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 ></iframe>
+
+                {/* Anillo dorado decorativo centrado sobre el pin del mapa,
+                    para resaltar visualmente la tienda dentro del barrio. */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="map-ring w-20 h-20 rounded-full border-2 border-[#C9A96E]"></span>
+                  <span className="map-ring map-ring-delay w-20 h-20 rounded-full border border-[#C9A96E]/60 absolute"></span>
+                </div>
               </div>
+
+              <p className="text-[#5A5A5A] text-xs mt-3 text-center">
+                📍 Barrio Pueblo Nuevo, Caucasia
+              </p>
 
               <a
                 href={CONTACT.mapLinkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full btn-gold py-4 rounded-sm font-medium tracking-wide text-sm mt-6 flex items-center justify-center gap-2"
+                className="w-full btn-gold py-4 rounded-sm font-medium tracking-wide text-sm mt-4 flex items-center justify-center gap-2"
               >
                 <MapPin size={16} />
                 CÓMO LLEGAR
