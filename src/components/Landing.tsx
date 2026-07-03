@@ -19,7 +19,7 @@ const CONTACT = {
   instagramUrl: "https://www.instagram.com/fraganti.co",
   tiktokUrl: "https://www.tiktok.com/@fraganti.co",
   storeAddress: "Carrera 14 #11, esquina, Barrio Pueblo Nuevo, Caucasia, Antioquia",
-  mapEmbedUrl: "https://www.google.com/maps?q=Carrera+14+%2311+Barrio+Pueblo+Nuevo+Caucasia+Antioquia+Colombia&output=embed",
+  mapEmbedUrl: "https://www.google.com/maps?q=Carrera+14+%2311+Barrio+Pueblo+Nuevo+Caucasia+Antioquia+Colombia&z=18&output=embed",
   mapLinkUrl: "https://www.google.com/maps/search/?api=1&query=Carrera+14+%2311+Barrio+Pueblo+Nuevo+Caucasia+Antioquia+Colombia",
 };
 
