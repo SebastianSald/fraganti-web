@@ -5,7 +5,7 @@ import {
   Instagram, Youtube, Check, Droplets, TreePine, 
   Sparkles, Citrus, Star
 } from "lucide-react";
-import { PRODUCTS, FAMILIES, QUIZ_QUESTIONS } from "../data/perfumes";
+import { loadPerfumes, FAMILIES, QUIZ_QUESTIONS, type Perfume } from "../data/perfumes";
 import { QuickViewModal } from "./QuickViewModal";
 
 const FAMILY_ICONS: Record<string, React.ReactNode> = {
@@ -76,7 +76,14 @@ export function Landing() {
   const [formStatus, setFormStatus] = useState<"idle" | "success">("idle");
 
   const [quickViewId, setQuickViewId] = useState<number | null>(null);
+  const [PRODUCTS, setPRODUCTS] = useState<Perfume[]>([]);
   const quickViewProduct = PRODUCTS.find(p => p.id === quickViewId) ?? null;
+
+  useEffect(() => {
+    loadPerfumes()
+      .then(setPRODUCTS)
+      .catch((err) => console.error("Error cargando el catálogo:", err));
+  }, []);
 
   useEffect(() => {
     // Simulate loading screen
