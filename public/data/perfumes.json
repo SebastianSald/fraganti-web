@@ -556,5 +556,37 @@
         "Cedro"
       ]
     }
+  },
+  {
+    "id": 21,
+    "name": "Orientica Premium Royal Bleu",
+    "inspiradoEn": "Parfums de Marly Layton",
+    "family": "Oriental",
+    "price": "$390.000",
+    "image": "orientica rb.jpg",
+    "isNew": true,
+    "notasCorta": "amaderada, especiada",
+    "notas": {
+      "salida": [
+        "Manzana verde",
+        "Lavanda",
+        "Mandarina",
+        "Pimienta",
+        "Bergamota"
+      ],
+      "corazon": [
+        "Cardamomo",
+        "Geranio",
+        "Violeta",
+        "Jazmín"
+      ],
+      "fondo": [
+        "Vainilla",
+        "Sándalo",
+        "Madera de gaiac",
+        "Pachulí",
+        "Almizcle"
+      ]
+    }
   }
 ]
