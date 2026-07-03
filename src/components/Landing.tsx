@@ -5,7 +5,11 @@ import {
   Instagram, Check, Droplets, TreePine, 
   Sparkles, Citrus, Star
 } from "lucide-react";
-import { loadPerfumes, FAMILIES, QUIZ_QUESTIONS, type Perfume } from "../data/perfumes";
+import {
+  loadPerfumes, FAMILIES, QUIZ_QUESTIONS,
+  formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
+  type Perfume, type FormatoKey,
+} from "../data/perfumes";
 import { QuickViewModal } from "./QuickViewModal";
 
 // ============================================================================
@@ -92,6 +96,113 @@ function FadeIn({ children, delay = 0, className = "", direction = "up" }: { chi
     >
       {children}
     </div>
+  );
+}
+
+// Tarjeta de producto individual — maneja su propio formato seleccionado
+// (Completo / Decant 5ml / Decant 10ml) y refleja el stock de cada uno.
+function ProductCard({
+  product,
+  delay,
+  onQuickView,
+}: {
+  product: Perfume;
+  delay: number;
+  onQuickView: () => void;
+}) {
+  const ofrecidos = formatosOfrecidos(product);
+  const agotado = perfumeAgotado(product);
+  const [selected, setSelected] = useState<FormatoKey | null>(() => primerFormatoDisponible(product));
+
+  const selectedInfo = selected ? product.formatos[selected] : null;
+  const selectedSinStock = !selectedInfo || selectedInfo.stock <= 0;
+
+  return (
+    <FadeIn delay={delay} direction="up">
+      <div
+        className={`product-card group bg-white rounded-lg p-6 flex flex-col h-full relative overflow-hidden ${
+          agotado ? "grayscale opacity-70" : "cursor-pointer"
+        }`}
+      >
+        {product.isNew && !agotado && (
+          <span className="absolute top-6 left-6 z-10 bg-[#C9A96E] text-[#1A1A1A] text-[10px] font-bold px-3 py-1 tracking-widest rounded-sm">
+            NUEVO
+          </span>
+        )}
+        {agotado && (
+          <span className="absolute top-6 left-6 z-10 bg-[#5A5A5A] text-white text-[10px] font-bold px-3 py-1 tracking-widest rounded-sm">
+            AGOTADO
+          </span>
+        )}
+
+        <div className="product-image-container relative h-72 mb-8 bg-[#F5F5DC]/30 rounded-md overflow-hidden flex items-center justify-center">
+          <img
+            src={`/images/${product.image}`}
+            alt={product.name}
+            className="w-full h-full object-cover mix-blend-multiply"
+          />
+
+          {/* Quick add overlay on hover */}
+          <div className="absolute inset-0 bg-[#1A1A1A]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+            <button
+              onClick={onQuickView}
+              className="bg-[#F8F5F2] text-[#1A1A1A] px-6 py-3 rounded-sm font-medium text-sm tracking-wide hover:bg-[#C9A96E] hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"
+            >
+              VISTA RÁPIDA
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col flex-grow text-center">
+          <span className="text-[#C9A96E] text-xs font-semibold tracking-widest uppercase mb-2">{product.family}</span>
+          <h3 className="font-serif text-2xl text-[#1A1A1A] mb-1">{product.name}</h3>
+          <p className="text-[#5A5A5A] text-sm italic mb-4 flex-grow font-serif">{product.notasCorta}</p>
+
+          {/* Selector de formato: solo se muestran los que el negocio ofrece */}
+          {ofrecidos.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2 mb-4">
+              {ofrecidos.map((key) => {
+                const info = product.formatos[key];
+                const sinStock = info.stock <= 0;
+                const isSelected = selected === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={sinStock}
+                    onClick={() => setSelected(key)}
+                    className={`px-3 py-1.5 rounded-full text-[11px] md:text-xs border transition-all ${
+                      sinStock
+                        ? "border-[#E0E0E0] text-[#B0B0B0] bg-[#F5F5F5] cursor-not-allowed line-through"
+                        : isSelected
+                        ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
+                        : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                    }`}
+                  >
+                    {FORMATO_LABELS[key]}{sinStock ? " · Agotado" : ""}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <p className="text-[#1A1A1A] font-medium tracking-wide mb-6">
+            {!agotado && selectedInfo && !selectedSinStock ? selectedInfo.precio : "Agotado"}
+          </p>
+
+          <button
+            disabled={agotado || selectedSinStock}
+            className={`w-full py-3 rounded-sm text-sm tracking-widest font-medium transition-colors ${
+              agotado || selectedSinStock
+                ? "border border-[#E0E0E0] text-[#B0B0B0] cursor-not-allowed"
+                : "btn-outline group-hover:bg-[#1A1A1A] group-hover:text-[#F8F5F2]"
+            }`}
+          >
+            {agotado || selectedSinStock ? "AGOTADO" : "AGREGAR AL CARRITO"}
+          </button>
+        </div>
+      </div>
+    </FadeIn>
   );
 }
 
@@ -425,43 +536,12 @@ export function Landing() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {filteredProducts.map((product, index) => (
-            <FadeIn key={product.id} delay={index * 150} direction="up">
-              <div className="product-card group cursor-pointer bg-white rounded-lg p-6 flex flex-col h-full relative overflow-hidden">
-                {product.isNew && (
-                  <span className="absolute top-6 left-6 z-10 bg-[#C9A96E] text-[#1A1A1A] text-[10px] font-bold px-3 py-1 tracking-widest rounded-sm">
-                    NUEVO
-                  </span>
-                )}
-                <div className="product-image-container relative h-72 mb-8 bg-[#F5F5DC]/30 rounded-md overflow-hidden flex items-center justify-center">
-                  <img 
-                    src={`/images/${product.image}`}
-                    alt={product.name}
-                    className="w-full h-full object-cover mix-blend-multiply"
-                  />
-                  
-                  {/* Quick add overlay on hover */}
-                  <div className="absolute inset-0 bg-[#1A1A1A]/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                    <button 
-                      onClick={() => setQuickViewId(product.id)}
-                      className="bg-[#F8F5F2] text-[#1A1A1A] px-6 py-3 rounded-sm font-medium text-sm tracking-wide hover:bg-[#C9A96E] hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"
-                    >
-                      VISTA RÁPIDA
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col flex-grow text-center">
-                  <span className="text-[#C9A96E] text-xs font-semibold tracking-widest uppercase mb-2">{product.family}</span>
-                  <h3 className="font-serif text-2xl text-[#1A1A1A] mb-1">{product.name}</h3>
-                  <p className="text-[#5A5A5A] text-sm italic mb-4 flex-grow font-serif">{product.notasCorta}</p>
-                  <p className="text-[#1A1A1A] font-medium tracking-wide mb-6">{product.price}</p>
-                  
-                  <button className="w-full btn-outline py-3 rounded-sm text-sm tracking-widest font-medium group-hover:bg-[#1A1A1A] group-hover:text-[#F8F5F2]">
-                    AGREGAR AL CARRITO
-                  </button>
-                </div>
-              </div>
-            </FadeIn>
+            <ProductCard
+              key={product.id}
+              product={product}
+              delay={index * 150}
+              onQuickView={() => setQuickViewId(product.id)}
+            />
           ))}
         </div>
         

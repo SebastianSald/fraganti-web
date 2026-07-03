@@ -4,7 +4,6 @@
     "name": "Lattafa Yara Elixir",
     "inspiradoEn": "",
     "family": "Oriental",
-    "price": "$195.000",
     "image": "yara elixir.jpg",
     "isNew": true,
     "notasCorta": "femenina, avainillada",
@@ -22,6 +21,23 @@
         "Caramelo",
         "ámbar"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$195.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -29,7 +45,6 @@
     "name": "Arabiyat Prestige Marwa",
     "inspiradoEn": "Louis Vuitton Imagination",
     "family": "Fresca",
-    "price": "$280.000",
     "image": "marwa.jpg",
     "isNew": true,
     "notasCorta": "citrico",
@@ -50,6 +65,23 @@
         "Té negro",
         "Madera de gaiac"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$280.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -57,7 +89,6 @@
     "name": "Versace Eros EDP TESTER",
     "inspiradoEn": "",
     "family": "Cítrica",
-    "price": "$300.000",
     "image": "versace eros.jpg",
     "isNew": true,
     "notasCorta": "amaderada, fresca",
@@ -80,6 +111,23 @@
         "Naranja amarga",
         "cuero"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$300.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -87,7 +135,6 @@
     "name": "Odyssey Go Mango",
     "inspiradoEn": "",
     "family": "Fresca",
-    "price": "$235.000",
     "image": "odyssey gm.jpg",
     "isNew": true,
     "notasCorta": "tropical, unisex",
@@ -108,6 +155,23 @@
         "Nota de frutos secos",
         "Madera de gaiac"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$235.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -115,7 +179,6 @@
     "name": "Club de Nuit Intense Parfum Limited Edition",
     "inspiradoEn": "Creed Aventus",
     "family": "Cítrica",
-    "price": "$380.000",
     "image": "cdn i.jpg",
     "isNew": true,
     "notasCorta": "cuero, ahumada",
@@ -139,6 +202,23 @@
         "ámbar gris",
         "Ambroxán"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$380.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -146,7 +226,6 @@
     "name": "Lattafa Art of Universe",
     "inspiradoEn": "",
     "family": "Fresca",
-    "price": "$290.000",
     "image": "art of universe.jpg",
     "isNew": true,
     "notasCorta": "fresca, atalcada",
@@ -166,6 +245,23 @@
         "Cedro",
         "Almizcle"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$290.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -173,7 +269,6 @@
     "name": "Amber Oud Gold Edition ",
     "inspiradoEn": "XERJOFF Erba Pura",
     "family": "Oriental",
-    "price": "$240.000",
     "image": "amber oud ge.jpg",
     "isNew": true,
     "notasCorta": "dulce, afrutado",
@@ -193,6 +288,23 @@
         "Notas amaderadas",
         "Almizcle"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$240.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -200,7 +312,6 @@
     "name": "Arabiyat Prestige Raspberry Ripple",
     "inspiradoEn": "",
     "family": "Floral",
-    "price": "$230.000",
     "image": "arabiyat prestige rr.jpg",
     "isNew": true,
     "notasCorta": "afrutado, dulce",
@@ -219,6 +330,23 @@
         "Caramelo",
         "Musgo"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$230.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -226,7 +354,6 @@
     "name": "Arabiyat Prestige Bahiya Garnet",
     "inspiradoEn": "",
     "family": "Floral",
-    "price": "$250.000",
     "image": "bahiya garnet.jpg",
     "isNew": true,
     "notasCorta": "acerezado, dulce",
@@ -234,6 +361,23 @@
       "salida": [],
       "corazon": [],
       "fondo": []
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$250.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -241,7 +385,6 @@
     "name": "Club de Nuit Sillage",
     "inspiradoEn": "Creed Silver Mountain Water",
     "family": "Fresca",
-    "price": "$240.000",
     "image": "cdb sillage.jpg",
     "isNew": true,
     "notasCorta": "cítrico, floral",
@@ -265,6 +408,23 @@
         "Sándalo",
         "Cedro"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$240.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -272,7 +432,6 @@
     "name": "Club de Nuit Urban Man Elixir",
     "inspiradoEn": "Dior Sauvage",
     "family": "Fresca",
-    "price": "$240.000",
     "image": "cdn ume.jpg",
     "isNew": true,
     "notasCorta": "ámbar, aromática",
@@ -296,6 +455,23 @@
         "Pachulí",
         "Ambroxán"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$240.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -303,7 +479,6 @@
     "name": "Dolce Gabbana Light Blue",
     "inspiradoEn": "",
     "family": "Fresca",
-    "price": "$335.000",
     "image": "dyg lb.jpg",
     "isNew": true,
     "notasCorta": "cítrico, marino",
@@ -320,6 +495,23 @@
         "Almizcle",
         "Amberwood"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$335.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -327,7 +519,6 @@
     "name": "Hawas For Him",
     "inspiradoEn": "Paco Rabanne Invictus ",
     "family": "Fresca",
-    "price": "$230.000",
     "image": "hawas fh.jpg",
     "isNew": true,
     "notasCorta": "acuática, afrutada",
@@ -349,6 +540,23 @@
         "Pachulí",
         "Trozos de madera a la deriva"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$230.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -356,7 +564,6 @@
     "name": "Lattafa Her Confession",
     "inspiradoEn": "",
     "family": "Oriental",
-    "price": "$220.000",
     "image": "her confession.jpg",
     "isNew": true,
     "notasCorta": "avainillado, floral",
@@ -375,6 +582,23 @@
         "Almizcle",
         "Haba tonka"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$220.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -382,7 +606,6 @@
     "name": "Lattafa His Confession",
     "inspiradoEn": "",
     "family": "Oriental",
-    "price": "$220.000",
     "image": "his confession.jpg",
     "isNew": true,
     "notasCorta": "avainillado, especiado",
@@ -405,6 +628,23 @@
         "Cedro",
         "Pachulí"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$220.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -412,7 +652,6 @@
     "name": "Issey Miyake Pour Homme",
     "inspiradoEn": "",
     "family": "Cítrica",
-    "price": "$280.000",
     "image": "issey miyake.jpg",
     "isNew": true,
     "notasCorta": "fresco, verde",
@@ -441,6 +680,23 @@
         "ámbar",
         "Tabaco"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$280.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -448,7 +704,6 @@
     "name": "Moschino TOY BOY TESTER",
     "inspiradoEn": "",
     "family": "Floral",
-    "price": "$235.000",
     "image": "toyboy.jpg",
     "isNew": true,
     "notasCorta": "rosas, amaderado",
@@ -470,6 +725,23 @@
         "Sándalo",
         "ámbar"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$235.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -477,7 +749,6 @@
     "name": "Supremacy Not Only Intense",
     "inspiradoEn": "Creed Aventus",
     "family": "Amaderada",
-    "price": "$340.000",
     "image": "supremacy noi.jpg",
     "isNew": true,
     "notasCorta": "afrutado, musgoso",
@@ -497,6 +768,23 @@
         "Almizcle",
         "Azafrán"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$340.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -504,7 +792,6 @@
     "name": "Odyssey Home White",
     "inspiradoEn": "Armani Stronger With YOU",
     "family": "Amaderada",
-    "price": "$220.000",
     "image": "odyssey hw.jpg",
     "isNew": true,
     "notasCorta": "dulce, aromático",
@@ -524,6 +811,23 @@
         "Amberwood",
         "Cedro"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$220.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -531,7 +835,6 @@
     "name": "Odyssey BA HA MAS",
     "inspiradoEn": "",
     "family": "Fresca",
-    "price": "$245.000",
     "image": "o bahamas.jpg",
     "isNew": true,
     "notasCorta": "marino, acuático",
@@ -555,6 +858,23 @@
         "ámbar",
         "Cedro"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$245.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   },
   {
@@ -562,7 +882,6 @@
     "name": "Orientica Premium Royal Bleu",
     "inspiradoEn": "Parfums de Marly Layton",
     "family": "Oriental",
-    "price": "$390.000",
     "image": "orientica rb.jpg",
     "isNew": true,
     "notasCorta": "amaderada, especiada",
@@ -587,6 +906,23 @@
         "Pachulí",
         "Almizcle"
       ]
+    },
+    "formatos": {
+      "completo": {
+        "disponible": true,
+        "precio": "$390.000",
+        "stock": 5
+      },
+      "decant5": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      },
+      "decant10": {
+        "disponible": false,
+        "precio": "",
+        "stock": 0
+      }
     }
   }
 ]

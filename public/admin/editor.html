@@ -149,6 +149,41 @@
   .img-controls label.file-btn-small:hover { border-color: var(--gold); }
   .img-hint { font-size: 11px; color: #A0A0A0; margin-top: 4px; line-height: 1.5; }
 
+  .formats-block { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #E5E0D5; }
+  .formats-block h4 { font-family: 'Cormorant Garamond', serif; font-size: 17px; margin: 0 0 4px; }
+  .formats-hint { font-size: 12px; color: #A0A0A0; margin: 0 0 14px; line-height: 1.5; }
+  .format-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 0.7fr;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #E5E0D5;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #FDFBF7;
+  }
+  .format-row.is-off { opacity: 0.55; }
+  .format-row .fmt-check { display: flex; align-items: center; gap: 8px; }
+  .format-row .fmt-check input { width: 16px; height: 16px; flex-shrink: 0; }
+  .format-row .fmt-check label { font-size: 13px; font-weight: 500; margin: 0; }
+  .format-row input[type=text], .format-row input[type=number] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #E0E0E0;
+    border-radius: 5px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    background: white;
+  }
+  .format-row input:disabled { background: #F0EEE9; color: #B0B0B0; }
+  .format-row .fmt-stock-wrap { display: flex; flex-direction: column; gap: 2px; }
+  .format-row .fmt-stock-wrap span { font-size: 10px; color: #A0A0A0; }
+  .agotado-badge {
+    background: #c0392b; color: white; font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 10px; letter-spacing: 0.03em; margin-left: 8px;
+  }
+
   .notes-block { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #E5E0D5; }
   .notes-block h4 { font-family: 'Cormorant Garamond', serif; font-size: 17px; margin: 0 0 12px; }
   .note-group { margin-bottom: 14px; }
@@ -235,7 +270,8 @@
     <h2>Cómo funciona</h2>
     <ol>
       <li><b>Carga</b> tu archivo <code>perfumes.json</code> actual (botón abajo) — o empieza desde cero si es la primera vez.</li>
-      <li><b>Edita</b> cada perfume con los formularios: nombre, precio, familia, notas, foto.</li>
+      <li><b>Edita</b> cada perfume con los formularios: nombre, familia, notas, foto.</li>
+      <li><b>Disponibilidad y stock:</b> marca qué formatos vendes de cada perfume (Frasco completo / Decant 5ml / Decant 10ml), con su precio y cuántas unidades quedan. Si un formato no lo vendes, deja su casilla sin marcar y no aparecerá en la página. Si el stock de un formato llega a 0, la página lo muestra automáticamente en gris como "Agotado" — pero los demás formatos siguen comprables si tienen stock.</li>
       <li>Cuando termines, dale a <b>"Descargar catálogo actualizado"</b> — se descarga un archivo <code>perfumes.json</code>.</li>
       <li>Sube ese archivo a tu repositorio de GitHub, dentro de la carpeta <code>public/data/</code>, reemplazando el que ya está (en GitHub: abre la carpeta → arrastra el archivo nuevo → "Commit changes"). Vercel actualiza tu página sola en menos de un minuto.</li>
       <li>Si agregaste fotos nuevas, súbelas de la misma forma a la carpeta <code>public/images/</code> — con el mismo nombre de archivo que escribiste aquí.</li>
@@ -267,19 +303,36 @@ const FAMILIAS = ["Floral", "Oriental", "Amaderada", "Fresca", "Cítrica", "Flor
 let perfumes = [];
 let nextId = 1;
 
+const FORMATO_LABELS = { completo: "Frasco completo", decant5: "Decant 5ml", decant10: "Decant 10ml" };
+
+function blankFormatos() {
+  return {
+    completo: { disponible: true, precio: "", stock: 0 },
+    decant5: { disponible: false, precio: "", stock: 0 },
+    decant10: { disponible: false, precio: "", stock: 0 },
+  };
+}
+
 function blankPerfume() {
   return {
     id: nextId++,
     name: "",
     inspiradoEn: "",
     family: FAMILIAS[0],
-    price: "",
     image: "",
     isNew: false,
     notasCorta: "",
     notas: { salida: [], corazon: [], fondo: [] },
+    formatos: blankFormatos(),
     _imgPreviewUrl: null,
   };
+}
+
+function estaAgotado(p) {
+  const keys = Object.keys(p.formatos || {});
+  const ofrecidos = keys.filter(k => p.formatos[k].disponible);
+  if (ofrecidos.length === 0) return true;
+  return ofrecidos.every(k => Number(p.formatos[k].stock) <= 0);
 }
 
 function render() {
@@ -299,6 +352,7 @@ function renderCard(p, idx) {
   summary.innerHTML = `
     ${thumbSrc ? `<img src="${thumbSrc}" onerror="this.style.visibility='hidden'" />` : `<div style="width:44px;height:44px;background:#F5F5DC;border-radius:6px;"></div>`}
     <span class="name">${p.name || "(Sin nombre)"}</span>
+    ${estaAgotado(p) ? `<span class="agotado-badge">AGOTADO</span>` : ""}
     <span class="family">${p.family}</span>
   `;
   details.appendChild(summary);
@@ -318,16 +372,12 @@ function renderCard(p, idx) {
       </div>
     </div>
 
-    <div class="row3">
+    <div class="row2">
       <div class="field">
         <label>Familia olfativa</label>
         <select data-field="family">
           ${FAMILIAS.map(f => `<option value="${f}" ${f === p.family ? "selected" : ""}>${f}</option>`).join("")}
         </select>
-      </div>
-      <div class="field">
-        <label>Precio</label>
-        <input type="text" data-field="price" value="${escapeHtml(p.price)}" placeholder="Ej. $85.000" />
       </div>
       <div class="field">
         <label>Frase corta (se ve en la tarjeta)</label>
@@ -338,6 +388,14 @@ function renderCard(p, idx) {
     <div class="checkbox-row">
       <input type="checkbox" id="isNew-${p.id}" data-field="isNew" ${p.isNew ? "checked" : ""} />
       <label for="isNew-${p.id}">Mostrar etiqueta "NUEVO" en este perfume</label>
+    </div>
+
+    <div class="formats-block">
+      <h4>Disponibilidad, precio y stock</h4>
+      <p class="formats-hint">Marca la casilla de cada formato que SÍ vendes de este perfume. Si el stock llega a 0, ese formato se muestra "Agotado" en la página automáticamente — no necesitas desmarcar la casilla, solo bajar el stock a 0.</p>
+      ${renderFormatRow(p, "completo")}
+      ${renderFormatRow(p, "decant5")}
+      ${renderFormatRow(p, "decant10")}
     </div>
 
     <div class="field">
@@ -386,6 +444,25 @@ function renderCard(p, idx) {
         const newDetails = [...document.querySelectorAll(".perfume-card")][idx];
         if (newDetails && wasOpen) newDetails.open = true;
       }
+    });
+  });
+
+  // Wire formatos (completo / decant5 / decant10): disponible, precio, stock
+  body.querySelectorAll("[data-format]").forEach(row => {
+    const key = row.getAttribute("data-format");
+    row.querySelectorAll("[data-fmtfield]").forEach(el => {
+      const fmtField = el.getAttribute("data-fmtfield");
+      const evt = el.type === "checkbox" ? "change" : "input";
+      el.addEventListener(evt, () => {
+        const val = el.type === "checkbox" ? el.checked : (el.type === "number" ? Number(el.value || 0) : el.value);
+        p.formatos[key][fmtField] = val;
+        if (fmtField === "disponible") {
+          const wasOpen = details.open;
+          render();
+          const newDetails = [...document.querySelectorAll(".perfume-card")][idx];
+          if (newDetails) newDetails.open = wasOpen;
+        }
+      });
     });
   });
 
@@ -443,6 +520,27 @@ function renderCard(p, idx) {
   return details;
 }
 
+function renderFormatRow(p, key) {
+  const f = p.formatos[key];
+  const off = !f.disponible;
+  return `
+    <div class="format-row ${off ? "is-off" : ""}" data-format="${key}">
+      <div class="fmt-check">
+        <input type="checkbox" id="fmt-${key}-${p.id}" data-fmtfield="disponible" ${f.disponible ? "checked" : ""} />
+        <label for="fmt-${key}-${p.id}">${FORMATO_LABELS[key]}</label>
+      </div>
+      <div class="fmt-stock-wrap">
+        <span>Precio</span>
+        <input type="text" data-fmtfield="precio" value="${escapeHtml(f.precio)}" placeholder="Ej. $195.000" ${off ? "disabled" : ""} />
+      </div>
+      <div class="fmt-stock-wrap">
+        <span>Stock</span>
+        <input type="number" min="0" step="1" data-fmtfield="stock" value="${f.stock}" ${off ? "disabled" : ""} />
+      </div>
+    </div>
+  `;
+}
+
 function renderNoteGroup(p, key, label) {
   const chips = p.notas[key].map((n, i) => `
     <span class="chip">${escapeHtml(n)} <button data-noteremove="${key}" data-idx="${i}" type="button">✕</button></span>
@@ -481,16 +579,27 @@ document.getElementById("loadInput").addEventListener("change", (e) => {
   reader.onload = () => {
     try {
       const data = JSON.parse(reader.result);
-      perfumes = data.map(item => ({
-        ...blankPerfumeShape(),
-        ...item,
-        notas: {
-          salida: (item.notas && item.notas.salida) || [],
-          corazon: (item.notas && item.notas.corazon) || [],
-          fondo: (item.notas && item.notas.fondo) || [],
-        },
-        _imgPreviewUrl: null,
-      }));
+      perfumes = data.map(item => {
+        // Migración automática: si el perfume viene del esquema viejo
+        // (con "price" plano, sin "formatos"), lo convertimos aquí mismo.
+        let formatos = item.formatos;
+        if (!formatos) {
+          formatos = blankFormatos();
+          formatos.completo = { disponible: true, precio: item.price || "", stock: 5 };
+        }
+        const { price, ...itemSinPrice } = item;
+        return {
+          ...blankPerfumeShape(),
+          ...itemSinPrice,
+          notas: {
+            salida: (item.notas && item.notas.salida) || [],
+            corazon: (item.notas && item.notas.corazon) || [],
+            fondo: (item.notas && item.notas.fondo) || [],
+          },
+          formatos,
+          _imgPreviewUrl: null,
+        };
+      });
       nextId = Math.max(0, ...perfumes.map(p => p.id || 0)) + 1;
       document.getElementById("loadStatus").textContent = `Cargados ${perfumes.length} perfumes desde "${file.name}".`;
       render();
@@ -502,7 +611,7 @@ document.getElementById("loadInput").addEventListener("change", (e) => {
 });
 
 function blankPerfumeShape() {
-  return { id: nextId++, name: "", inspiradoEn: "", family: FAMILIAS[0], price: "", image: "", isNew: false, notasCorta: "" };
+  return { id: nextId++, name: "", inspiradoEn: "", family: FAMILIAS[0], image: "", isNew: false, notasCorta: "", formatos: blankFormatos() };
 }
 
 document.getElementById("downloadBtn").addEventListener("click", () => {
