@@ -27,7 +27,15 @@ function LoginScreen({ onLoggedIn }: { onLoggedIn: () => void }) {
     const { error } = await supabase!.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      setError("Correo o contraseña incorrectos.");
+      // Mostramos el mensaje real de Supabase (traducido cuando aplica) para
+      // saber exactamente qué está pasando, en vez de adivinar.
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        setError("Tu usuario existe pero no está confirmado. Ve a Supabase → Authentication → Users, ábrelo y confírmalo (o bórralo y créalo de nuevo marcando \"Auto Confirm User\").");
+      } else if (error.message.toLowerCase().includes("invalid login credentials")) {
+        setError("Correo o contraseña incorrectos, o el usuario no existe en Supabase → Authentication → Users.");
+      } else {
+        setError(`Error de Supabase: ${error.message}`);
+      }
       return;
     }
     onLoggedIn();
