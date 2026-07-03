@@ -5,7 +5,7 @@
 // El admin visual ahora está en /admin (AdminPanel.tsx), protegido con login.
 // ============================================================================
 
-import { supabase } from "../lib/supabaseClient";
+import { supabase, supabaseConfigured } from "../lib/supabaseClient";
 
 export interface FragranceNotes {
   salida: string[];
@@ -107,23 +107,43 @@ function perfumeAFila(p: Partial<Perfume>) {
   return fila;
 }
 
-/** Carga el catálogo completo desde Supabase, ordenado por id. */
+/** Respaldo: carga desde el JSON estático si Supabase no está disponible. */
+async function cargarDesdeRespaldo(): Promise<Perfume[]> {
+  const res = await fetch("/data/perfumes.json", { cache: "no-store" });
+  if (!res.ok) throw new Error(`Tampoco se pudo cargar el respaldo (${res.status})`);
+  const data = await res.json();
+  return data.map((item: any) => (item.formatos ? item : { ...item, formatos: FORMATOS_VACIOS }));
+}
+
+/**
+ * Carga el catálogo completo. Intenta Supabase primero (stock en vivo);
+ * si Supabase no está configurado o falla, cae automáticamente al
+ * catálogo de respaldo en /public/data/perfumes.json, para que la tienda
+ * NUNCA se quede en blanco por un problema de base de datos.
+ */
 export async function loadPerfumes(): Promise<Perfume[]> {
-  const { data, error } = await supabase.from("perfumes").select("*").order("id", { ascending: true });
-  if (error) {
-    throw new Error(`No se pudo cargar el catálogo: ${error.message}`);
+  if (supabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.from("perfumes").select("*").order("id", { ascending: true });
+      if (error) throw error;
+      if (data && data.length > 0) return data.map(filaASupaPerfume);
+    } catch (e) {
+      console.error("[Supabase] Error cargando catálogo, usando respaldo:", e);
+    }
   }
-  return (data || []).map(filaASupaPerfume);
+  return cargarDesdeRespaldo();
 }
 
 /** Actualiza un perfume existente (requiere sesión de admin por RLS). */
 export async function actualizarPerfume(id: number, cambios: Partial<Perfume>): Promise<void> {
+  if (!supabaseConfigured || !supabase) throw new Error("Supabase no está configurado todavía (ver README).");
   const { error } = await supabase.from("perfumes").update(perfumeAFila(cambios)).eq("id", id);
   if (error) throw new Error(`No se pudo guardar: ${error.message}`);
 }
 
 /** Crea un perfume nuevo (requiere sesión de admin por RLS). Devuelve el perfume creado con su id. */
 export async function crearPerfume(p: Omit<Perfume, "id">): Promise<Perfume> {
+  if (!supabaseConfigured || !supabase) throw new Error("Supabase no está configurado todavía (ver README).");
   const { data, error } = await supabase.from("perfumes").insert(perfumeAFila(p)).select().single();
   if (error) throw new Error(`No se pudo crear el perfume: ${error.message}`);
   return filaASupaPerfume(data);
@@ -131,6 +151,7 @@ export async function crearPerfume(p: Omit<Perfume, "id">): Promise<Perfume> {
 
 /** Elimina un perfume (requiere sesión de admin por RLS). */
 export async function eliminarPerfume(id: number): Promise<void> {
+  if (!supabaseConfigured || !supabase) throw new Error("Supabase no está configurado todavía (ver README).");
   const { error } = await supabase.from("perfumes").delete().eq("id", id);
   if (error) throw new Error(`No se pudo eliminar: ${error.message}`);
 }

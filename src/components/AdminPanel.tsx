@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Search, Plus, Trash2, LogOut, Check, X as XIcon, ChevronDown } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase, supabaseConfigured } from "../lib/supabaseClient";
 import {
   loadPerfumes, actualizarPerfume, crearPerfume, eliminarPerfume, nuevoPerfumeVacio,
   FAMILIAS_CATALOGO, FORMATO_LABELS, FORMATO_ORDEN,
@@ -24,7 +24,7 @@ function LoginScreen({ onLoggedIn }: { onLoggedIn: () => void }) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase!.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
       setError("Correo o contraseña incorrectos.");
@@ -409,10 +409,25 @@ export function AdminPanel() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
 
   useEffect(() => {
+    if (!supabaseConfigured || !supabase) return;
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  if (!supabaseConfigured) {
+    return (
+      <div className="min-h-screen bg-[#1A1A1A] flex items-center justify-center p-6">
+        <div className="bg-[#F8F5F2] rounded-lg p-8 max-w-md text-center">
+          <h1 className="font-serif text-2xl mb-3">Supabase no está configurado todavía</h1>
+          <p className="text-sm text-[#5A5A5A] mb-2">
+            Faltan las variables <code>VITE_SUPABASE_URL</code> y <code>VITE_SUPABASE_ANON_KEY</code> en Vercel.
+          </p>
+          <p className="text-sm text-[#5A5A5A]">Sigue los pasos del README (sección "Configurar Supabase") y vuelve a intentar.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (session === undefined) {
     return <div className="min-h-screen bg-[#1A1A1A] flex items-center justify-center text-[#C9A96E] font-serif text-xl">Cargando...</div>;
@@ -422,5 +437,5 @@ export function AdminPanel() {
     return <LoginScreen onLoggedIn={() => { /* onAuthStateChange actualiza la sesión solo */ }} />;
   }
 
-  return <Dashboard onLogout={() => supabase.auth.signOut()} />;
+  return <Dashboard onLogout={() => supabase!.auth.signOut()} />;
 }
