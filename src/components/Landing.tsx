@@ -2,11 +2,37 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Menu, X, Search, ShoppingBag, ChevronRight, Phone, 
   MessageCircle, ArrowDown, MapPin, Mail, Clock, 
-  Instagram, Youtube, Check, Droplets, TreePine, 
+  Instagram, Check, Droplets, TreePine, 
   Sparkles, Citrus, Star
 } from "lucide-react";
 import { loadPerfumes, FAMILIES, QUIZ_QUESTIONS, type Perfume } from "../data/perfumes";
 import { QuickViewModal } from "./QuickViewModal";
+
+// ============================================================================
+// DATOS DE CONTACTO — edita aquí si cambian tus redes o tu número.
+// ============================================================================
+const CONTACT = {
+  whatsappNumber: "+573242695225",
+  // Link con respuesta automática configurada en WhatsApp Business — se usa
+  // en los botones principales de WhatsApp (mejor experiencia que un número plano).
+  whatsappAutoReplyLink: "https://wa.me/message/7UXKMTVJUTO6N1",
+  instagramUrl: "https://www.instagram.com/fraganti.co",
+  tiktokUrl: "https://www.tiktok.com/@fraganti.co",
+};
+
+function TikTokIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+    </svg>
+  );
+}
 
 const FAMILY_ICONS: Record<string, React.ReactNode> = {
   Floral: <Sparkles className="w-8 h-8 text-[#C9A96E]" />,
@@ -749,11 +775,11 @@ export function Landing() {
               <p className="text-sm mb-6 italic font-serif">Auténtica perfumería de lujo en Colombia.</p>
               
               <div className="flex space-x-4">
-                <a href="#" className="w-10 h-10 rounded-full border border-[#333] flex items-center justify-center hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
+                <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full border border-[#333] flex items-center justify-center hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
                   <Instagram size={18} />
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full border border-[#333] flex items-center justify-center hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
-                  <Youtube size={18} />
+                <a href={CONTACT.tiktokUrl} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="w-10 h-10 rounded-full border border-[#333] flex items-center justify-center hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
+                  <TikTokIcon size={18} />
                 </a>
               </div>
             </div>
@@ -774,8 +800,14 @@ export function Landing() {
             <div>
               <h3 className="text-[#F8F5F2] font-medium tracking-widest text-sm uppercase mb-6">Atención al Cliente</h3>
               <ul className="space-y-3 text-sm">
-                <li className="flex items-center gap-2"><Phone size={14} className="text-[#C9A96E]" /> +57 300 123 4567</li>
-                <li className="flex items-center gap-2"><MessageCircle size={14} className="text-[#C9A96E]" /> WhatsApp Disponible</li>
+                <li className="flex items-center gap-2">
+                  <Phone size={14} className="text-[#C9A96E]" />
+                  <a href={`tel:${CONTACT.whatsappNumber}`} className="hover:text-[#C9A96E] transition-colors">+57 324 269 5225</a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <MessageCircle size={14} className="text-[#C9A96E]" />
+                  <a href={CONTACT.whatsappAutoReplyLink} target="_blank" rel="noopener noreferrer" className="hover:text-[#C9A96E] transition-colors">WhatsApp Disponible</a>
+                </li>
                 <li className="flex items-center gap-2"><Mail size={14} className="text-[#C9A96E]" /> fraganti.col@gmail.com</li>
                 <li className="mt-4 text-[#F8F5F2]">Medellín • Caucasia</li>
               </ul>
@@ -819,14 +851,17 @@ export function Landing() {
       
       {/* Mobile Sticky CTA - Appears when scrolled down */}
       <div className={`md:hidden fixed bottom-0 left-0 w-full bg-[#1A1A1A] p-4 border-t border-[#333] z-40 transition-transform duration-300 ${isScrolled ? 'translate-y-0' : 'translate-y-full'}`}>
-        <button className="w-full btn-gold py-3 rounded-sm font-medium text-sm shadow-[0_0_15px_rgba(201,169,110,0.3)]">
+        <a
+          href="#coleccion"
+          className="w-full btn-gold py-3 rounded-sm font-medium text-sm shadow-[0_0_15px_rgba(201,169,110,0.3)] flex items-center justify-center"
+        >
           VER CATÁLOGO COMPLETO
-        </button>
+        </a>
       </div>
 
       {/* WhatsApp Floating Button */}
       <a 
-        href="https://wa.me/573001234567" 
+        href={CONTACT.whatsappAutoReplyLink} 
         target="_blank" 
         rel="noopener noreferrer"
         className="fixed bottom-24 md:bottom-8 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform duration-300 flex items-center justify-center group"
@@ -840,7 +875,7 @@ export function Landing() {
 
       {/* Phone Call Floating Button (Desktop only, stacked above WA) */}
       <a 
-        href="tel:+573001234567"
+        href={`tel:${CONTACT.whatsappNumber}`}
         className="hidden md:flex fixed bottom-24 right-6 z-50 bg-[#1A1A1A] text-[#F8F5F2] border border-[#333] p-3 rounded-full shadow-lg hover:border-[#C9A96E] hover:text-[#C9A96E] transition-all duration-300 items-center justify-center group"
       >
         <Phone size={20} />
