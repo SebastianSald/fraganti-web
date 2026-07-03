@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Menu, X, Search, ShoppingBag, ChevronRight, Phone, 
-  MessageCircle, ArrowDown, MapPin, Mail, Clock, 
+  MessageCircle, ArrowDown, MapPin, Clock, 
   Instagram, Check, Droplets, TreePine, 
   Sparkles, Citrus, Star
 } from "lucide-react";
@@ -18,6 +18,9 @@ const CONTACT = {
   whatsappAutoReplyLink: "https://wa.me/message/7UXKMTVJUTO6N1",
   instagramUrl: "https://www.instagram.com/fraganti.co",
   tiktokUrl: "https://www.tiktok.com/@fraganti.co",
+  storeAddress: "Carrera 14 #11, esquina, Barrio Pueblo Nuevo, Caucasia, Antioquia",
+  mapEmbedUrl: "https://www.google.com/maps?q=Carrera+14+%2311+Barrio+Pueblo+Nuevo+Caucasia+Antioquia+Colombia&output=embed",
+  mapLinkUrl: "https://www.google.com/maps/search/?api=1&query=Carrera+14+%2311+Barrio+Pueblo+Nuevo+Caucasia+Antioquia+Colombia",
 };
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -98,9 +101,6 @@ export function Landing() {
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
   const [quizAnimating, setQuizAnimating] = useState(false);
 
-  const [formState, setFormState] = useState({ name: "", email: "", message: "" });
-  const [formStatus, setFormStatus] = useState<"idle" | "success">("idle");
-
   const [quickViewId, setQuickViewId] = useState<number | null>(null);
   const [PRODUCTS, setPRODUCTS] = useState<Perfume[]>([]);
   const quickViewProduct = PRODUCTS.find(p => p.id === quickViewId) ?? null;
@@ -144,19 +144,6 @@ export function Landing() {
       setQuizAnswers([]);
       setQuizAnimating(false);
     }, 400);
-  };
-
-  const isFormValid = formState.name.length > 2 && formState.email.includes("@") && formState.message.length > 5;
-
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isFormValid) {
-      setFormStatus("success");
-      setTimeout(() => {
-        setFormState({ name: "", email: "", message: "" });
-        setFormStatus("idle");
-      }, 3000);
-    }
   };
 
   const filteredProducts = activeFilter === "Todos" 
@@ -644,22 +631,30 @@ export function Landing() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           <FadeIn direction="right">
             <div className="bg-white p-8 md:p-12 rounded-lg shadow-sm border border-[#E8E8E8] h-full">
-              <h3 className="font-serif text-2xl text-[#1A1A1A] mb-8 border-b border-[#F0F0F0] pb-4">Nuestras Boutiques</h3>
+              <h3 className="font-serif text-2xl text-[#1A1A1A] mb-8 border-b border-[#F0F0F0] pb-4">Estamos ubicados en:</h3>
               
               <div className="space-y-8">
                 <div className="flex items-start">
                   <MapPin className="text-[#C9A96E] mt-1 mr-4 shrink-0" size={20} />
                   <div>
-                    <h4 className="font-medium text-[#1A1A1A] mb-1">Medellín, Colombia</h4>
-                    <p className="text-[#5A5A5A] text-sm mb-1">Carrera 70 #45-12, Sector Laureles</p>
+                    <h4 className="font-medium text-[#1A1A1A] mb-1">Caucasia, Antioquia</h4>
+                    <p className="text-[#5A5A5A] text-sm mb-1">{CONTACT.storeAddress}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <MapPin className="text-[#C9A96E] mt-1 mr-4 shrink-0" size={20} />
                   <div>
-                    <h4 className="font-medium text-[#1A1A1A] mb-1">Caucasia, Antioquia</h4>
-                    <p className="text-[#5A5A5A] text-sm mb-1">Calle 20 #10-5, Centro</p>
+                    <h4 className="font-medium text-[#1A1A1A] mb-1">Medellín, Colombia</h4>
+                    <p className="text-[#5A5A5A] text-sm mb-1">Domicilios en Medellín</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <MapPin className="text-[#C9A96E] mt-1 mr-4 shrink-0" size={20} />
+                  <div>
+                    <h4 className="font-medium text-[#1A1A1A] mb-1">Resto del país</h4>
+                    <p className="text-[#5A5A5A] text-sm mb-1">Envíos a toda Colombia</p>
                   </div>
                 </div>
 
@@ -677,15 +672,7 @@ export function Landing() {
                   <Phone className="text-[#C9A96E] mt-1 mr-4 shrink-0" size={20} />
                   <div>
                     <h4 className="font-medium text-[#1A1A1A] mb-1">Línea de Atención</h4>
-                    <a href="tel:+573001234567" className="text-[#5A5A5A] text-sm hover:text-[#C9A96E] transition-colors">+57 300 123 4567</a>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <Mail className="text-[#C9A96E] mt-1 mr-4 shrink-0" size={20} />
-                  <div>
-                    <h4 className="font-medium text-[#1A1A1A] mb-1">Correo Electrónico</h4>
-                    <a href="mailto:fraganti.col@gmail.com" className="text-[#5A5A5A] text-sm hover:text-[#C9A96E] transition-colors">fraganti.col@gmail.com</a>
+                    <a href={`tel:${CONTACT.whatsappNumber}`} className="text-[#5A5A5A] text-sm hover:text-[#C9A96E] transition-colors">+57 324 269 5225</a>
                   </div>
                 </div>
               </div>
@@ -693,71 +680,34 @@ export function Landing() {
           </FadeIn>
 
           <FadeIn direction="left">
-            <div className="bg-[#1C1C1C] text-[#F8F5F2] p-8 md:p-12 rounded-lg h-full relative overflow-hidden">
+            <div className="bg-[#1C1C1C] text-[#F8F5F2] p-8 md:p-12 rounded-lg h-full relative overflow-hidden flex flex-col">
               {/* Decorative corner element */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9A96E] opacity-10 rounded-bl-full pointer-events-none"></div>
-              
-              <h3 className="font-serif text-2xl mb-2 text-[#C9A96E]">Envíanos un mensaje</h3>
-              <p className="text-[#A0A0A0] text-sm mb-8 font-light">¿Buscas un perfume en específico? Te asesoramos.</p>
-              
-              {formStatus === "success" ? (
-                <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
-                  <div className="w-16 h-16 bg-[#C9A96E]/20 text-[#C9A96E] rounded-full flex items-center justify-center mb-6">
-                    <Check size={32} />
-                  </div>
-                  <h4 className="font-serif text-2xl text-[#F8F5F2] mb-2">Mensaje Enviado</h4>
-                  <p className="text-[#A0A0A0] font-light">Nos pondremos en contacto contigo a la brevedad.</p>
-                </div>
-              ) : (
-                <form onSubmit={handleFormSubmit} className="space-y-6">
-                  <div>
-                    <label htmlFor="name" className="block text-xs font-medium text-[#A0A0A0] uppercase tracking-widest mb-2">Nombre Completo</label>
-                    <input 
-                      type="text" 
-                      id="name"
-                      value={formState.name}
-                      onChange={e => setFormState({...formState, name: e.target.value})}
-                      className={`w-full bg-transparent border-b ${formState.name.length > 2 ? 'border-green-500/50' : 'border-[#333] focus:border-[#C9A96E]'} py-3 px-1 text-sm outline-none transition-colors`}
-                      placeholder="Ej. María Pérez"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="email" className="block text-xs font-medium text-[#A0A0A0] uppercase tracking-widest mb-2">Correo Electrónico</label>
-                    <input 
-                      type="email" 
-                      id="email"
-                      value={formState.email}
-                      onChange={e => setFormState({...formState, email: e.target.value})}
-                      className={`w-full bg-transparent border-b ${formState.email.includes('@') ? 'border-green-500/50' : 'border-[#333] focus:border-[#C9A96E]'} py-3 px-1 text-sm outline-none transition-colors`}
-                      placeholder="tu@email.com"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="message" className="block text-xs font-medium text-[#A0A0A0] uppercase tracking-widest mb-2">Mensaje</label>
-                    <textarea 
-                      id="message"
-                      rows={3}
-                      value={formState.message}
-                      onChange={e => setFormState({...formState, message: e.target.value})}
-                      className={`w-full bg-transparent border-b ${formState.message.length > 5 ? 'border-green-500/50' : 'border-[#333] focus:border-[#C9A96E]'} py-3 px-1 text-sm outline-none transition-colors resize-none custom-scrollbar`}
-                      placeholder="¿En qué podemos ayudarte?"
-                      required
-                    ></textarea>
-                  </div>
-                  
-                  <button 
-                    type="submit" 
-                    disabled={!isFormValid}
-                    className="w-full btn-gold py-4 rounded-sm font-medium tracking-wide text-sm mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ENVIAR MENSAJE
-                  </button>
-                </form>
-              )}
+
+              <h3 className="font-serif text-2xl mb-2 text-[#C9A96E]">Nuestra tienda</h3>
+              <p className="text-[#A0A0A0] text-sm mb-6 font-light">{CONTACT.storeAddress}</p>
+
+              <div className="relative flex-grow min-h-[280px] rounded-lg overflow-hidden border border-[#333]">
+                <iframe
+                  title="Ubicación de FRAGANTI en Caucasia"
+                  src={CONTACT.mapEmbedUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, position: "absolute", inset: 0, filter: "grayscale(0.3) contrast(1.1)" }}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+
+              <a
+                href={CONTACT.mapLinkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full btn-gold py-4 rounded-sm font-medium tracking-wide text-sm mt-6 flex items-center justify-center gap-2"
+              >
+                <MapPin size={16} />
+                CÓMO LLEGAR
+              </a>
             </div>
           </FadeIn>
         </div>
@@ -808,8 +758,7 @@ export function Landing() {
                   <MessageCircle size={14} className="text-[#C9A96E]" />
                   <a href={CONTACT.whatsappAutoReplyLink} target="_blank" rel="noopener noreferrer" className="hover:text-[#C9A96E] transition-colors">WhatsApp Disponible</a>
                 </li>
-                <li className="flex items-center gap-2"><Mail size={14} className="text-[#C9A96E]" /> fraganti.col@gmail.com</li>
-                <li className="mt-4 text-[#F8F5F2]">Medellín • Caucasia</li>
+                <li className="mt-4 text-[#F8F5F2]">Caucasia · Domicilios en Medellín · Envíos a toda Colombia</li>
               </ul>
             </div>
 
@@ -831,12 +780,12 @@ export function Landing() {
           </div>
 
           <div className="border-t border-[#333] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-xs">© 2024 FRAGANTI. Todos los derechos reservados.</p>
+            <p className="text-xs">© 2026 FRAGANTI. Todos los derechos reservados.</p>
             
             <div className="flex gap-4 md:gap-6 text-[10px] md:text-xs font-medium uppercase tracking-widest text-[#F8F5F2]">
               <span className="flex items-center gap-1"><Check size={12} className="text-[#C9A96E]" /> 100% Autenticidad</span>
               <span className="flex items-center gap-1"><Check size={12} className="text-[#C9A96E]" /> Pago Seguro</span>
-              <span className="flex items-center gap-1"><Check size={12} className="text-[#C9A96E]" /> Envíos a Colombia</span>
+              <span className="flex items-center gap-1"><Check size={12} className="text-[#C9A96E]" /> Envíos a toda Colombia</span>
             </div>
 
             <div className="flex gap-4 text-xs">
