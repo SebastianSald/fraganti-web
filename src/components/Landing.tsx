@@ -245,9 +245,18 @@ export function Landing() {
           <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20 flex items-center justify-center">
              <div className="w-[300px] h-[300px] bg-[#C9A96E] rounded-full blur-[100px] loader-mist"></div>
           </div>
-          <h1 className="loader-logo font-serif text-4xl md:text-6xl text-[#F8F5F2] tracking-[0.2em] font-light z-10 relative">
-            FRAGANTI
-          </h1>
+          <div className="loader-logo z-10 relative flex flex-col items-center gap-5">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border border-[#C9A96E]/50 flex items-center justify-center bg-[#F8F5F2]/[0.03]">
+              <img
+                src="/images/logo-fraganti.png"
+                alt="FRAGANTI"
+                className="w-10 h-10 md:w-12 md:h-12 object-contain"
+              />
+            </div>
+            <h1 className="font-serif text-4xl md:text-6xl text-[#F8F5F2] tracking-[0.2em] font-light">
+              FRAGANTI
+            </h1>
+          </div>
         </div>
       )}
 
@@ -263,7 +272,12 @@ export function Landing() {
           </button>
 
           {/* Logo */}
-          <a href="#" className={`font-serif text-2xl md:text-3xl font-medium tracking-[0.15em] transition-colors duration-300 ${isScrolled ? "text-[#C9A96E]" : "text-[#C9A96E] md:text-[#F8F5F2]"}`}>
+          <a href="#" className={`flex items-center gap-2.5 md:gap-3 font-serif text-2xl md:text-3xl font-medium tracking-[0.15em] transition-colors duration-300 ${isScrolled ? "text-[#C9A96E]" : "text-[#C9A96E] md:text-[#F8F5F2]"}`}>
+            <img
+              src="/images/logo-fraganti.png"
+              alt="FRAGANTI"
+              className="h-8 md:h-10 w-auto object-contain"
+            />
             FRAGANTI
           </a>
 
