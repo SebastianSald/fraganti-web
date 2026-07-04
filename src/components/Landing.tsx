@@ -7,9 +7,11 @@ import {
 import {
   loadPerfumes, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS, calcularMatchDelQuiz,
   formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
+  formatoEnOferta, perfumeEnOferta, porcentajeDescuento,
   type Perfume, type FormatoKey, type Genero, type QuizOption,
 } from "../data/perfumes";
 import { useCart, parsePrecioCOP, formatearCOP } from "../context/CartContext";
+import { loadResenas, resumenResenas, type Resena } from "../data/resenas";
 import { CartDrawer } from "./CartDrawer";
 import { QuickViewModal } from "./QuickViewModal";
 
@@ -132,12 +134,15 @@ function ProductCard({
 }) {
   const ofrecidos = formatosOfrecidos(product);
   const agotado = perfumeAgotado(product);
+  const enOferta = perfumeEnOferta(product);
   const [selected, setSelected] = useState<FormatoKey | null>(() => primerFormatoDisponible(product));
   const { addToCart } = useCart();
   const [agregado, setAgregado] = useState(false);
 
   const selectedInfo = selected ? product.formatos[selected] : null;
   const selectedSinStock = !selectedInfo || selectedInfo.stock <= 0;
+  const selectedEnOferta = selectedInfo ? formatoEnOferta(selectedInfo) : false;
+  const selectedDescuento = selectedInfo ? porcentajeDescuento(selectedInfo) : null;
 
   const handleAgregar = () => {
     if (!selected || agotado || selectedSinStock) return;
@@ -156,6 +161,11 @@ function ProductCard({
         {product.isNew && !agotado && (
           <span className="absolute top-6 left-6 z-10 bg-[#C9A96E] text-[#1A1A1A] text-[10px] font-bold px-3 py-1 tracking-widest rounded-sm">
             NUEVO
+          </span>
+        )}
+        {!product.isNew && enOferta && !agotado && (
+          <span className="absolute top-6 left-6 z-10 bg-red-600 text-white text-[10px] font-bold px-3 py-1 tracking-widest rounded-sm">
+            OFERTA
           </span>
         )}
         {agotado && (
@@ -215,9 +225,25 @@ function ProductCard({
             </div>
           )}
 
-          <p className="text-[#1A1A1A] font-medium tracking-wide mb-6">
-            {!agotado && selectedInfo && !selectedSinStock ? selectedInfo.precio : "Agotado"}
-          </p>
+          <div className="mb-6 flex items-center justify-center gap-2 flex-wrap">
+            {!agotado && selectedInfo && !selectedSinStock ? (
+              <>
+                {selectedEnOferta && (
+                  <span className="text-[#A0A0A0] text-sm line-through">{selectedInfo.precioAntes}</span>
+                )}
+                <span className={`font-medium tracking-wide ${selectedEnOferta ? "text-red-600" : "text-[#1A1A1A]"}`}>
+                  {selectedInfo.precio}
+                </span>
+                {selectedEnOferta && selectedDescuento !== null && (
+                  <span className="text-[10px] bg-red-600 text-white font-bold px-2 py-0.5 rounded-full">
+                    -{selectedDescuento}%
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-[#1A1A1A] font-medium tracking-wide">Agotado</span>
+            )}
+          </div>
 
           <button
             type="button"
@@ -250,6 +276,7 @@ export function Landing() {
   const [filtroGeneros, setFiltroGeneros] = useState<Genero[]>([]);
   const [filtroAromas, setFiltroAromas] = useState<string[]>([]);
   const [soloDecants, setSoloDecants] = useState(false);
+  const [soloOfertas, setSoloOfertas] = useState(false);
   const [panelFiltrosAbierto, setPanelFiltrosAbierto] = useState(false);
   
   const [quizStep, setQuizStep] = useState(0);
@@ -261,11 +288,15 @@ export function Landing() {
   const quickViewProduct = PRODUCTS.find(p => p.id === quickViewId) ?? null;
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { cantidadTotal } = useCart();
+  const [RESENAS, setRESENAS] = useState<Resena[]>([]);
 
   useEffect(() => {
     loadPerfumes()
       .then(setPRODUCTS)
       .catch((err) => console.error("Error cargando el catálogo:", err));
+    loadResenas()
+      .then(setRESENAS)
+      .catch((err) => console.error("Error cargando reseñas:", err));
   }, []);
 
   useEffect(() => {
@@ -316,7 +347,7 @@ export function Landing() {
   const toggleEnLista = <T,>(lista: T[], valor: T): T[] =>
     lista.includes(valor) ? lista.filter((v) => v !== valor) : [...lista, valor];
 
-  const hayFiltrosActivos = filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || searchTerm.trim() !== "";
+  const hayFiltrosActivos = filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || soloOfertas || searchTerm.trim() !== "";
 
   const limpiarFiltros = () => {
     setSearchTerm("");
@@ -324,6 +355,7 @@ export function Landing() {
     setFiltroGeneros([]);
     setFiltroAromas([]);
     setSoloDecants(false);
+    setSoloOfertas(false);
     setOrden("relevancia");
   };
 
@@ -354,6 +386,10 @@ export function Landing() {
       lista = lista.filter((p) => p.formatos.decant5.disponible || p.formatos.decant10.disponible);
     }
 
+    if (soloOfertas) {
+      lista = lista.filter((p) => perfumeEnOferta(p));
+    }
+
     const ordenada = [...lista];
     switch (orden) {
       case "nombre-asc":
@@ -381,7 +417,7 @@ export function Landing() {
     }
 
     return ordenada;
-  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroAromas, soloDecants, orden]);
+  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroAromas, soloDecants, soloOfertas, orden]);
 
   // Perfumes que sí se venden en decant (5ml o 10ml) — para la sección de Decants.
   const productosConDecants = React.useMemo(
@@ -416,6 +452,8 @@ export function Landing() {
     if (quizAnswers.length < QUIZ_QUESTIONS.length) return null;
     return calcularMatchDelQuiz(quizAnswers, PRODUCTS);
   }, [quizAnswers, PRODUCTS]);
+
+  const resumenGoogle = React.useMemo(() => resumenResenas(RESENAS), [RESENAS]);
 
   return (
     <div className="min-h-screen bg-[#F8F5F2] text-[#1A1A1A] font-poppins selection:bg-[#C9A96E] selection:text-white">
@@ -723,6 +761,16 @@ export function Landing() {
                 }`}
               >
                 <Droplets size={14} /> Solo Decants
+              </button>
+              <button
+                onClick={() => setSoloOfertas((v) => !v)}
+                className={`px-5 py-2 rounded-full text-sm border transition-all duration-300 flex items-center gap-1.5 ${
+                  soloOfertas
+                  ? "bg-red-600 text-white border-red-600"
+                  : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-red-600 hover:text-red-600"
+                }`}
+              >
+                🏷️ En Oferta
               </button>
               <button
                 onClick={() => setPanelFiltrosAbierto((v) => !v)}
@@ -1089,7 +1137,67 @@ export function Landing() {
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* RESEÑAS DE GOOGLE */}
+      {RESENAS.length > 0 && (
+        <section className="py-24 px-6 lg:px-12 max-w-7xl mx-auto">
+          <FadeIn>
+            <div className="text-center mb-12">
+              <span className="text-[#C9A96E] text-sm font-semibold tracking-widest uppercase mb-3 block">Lo que dicen de nosotros</span>
+              <h2 className="font-serif text-4xl md:text-5xl text-[#1A1A1A] mb-6">Reseñas en Google</h2>
+
+              <div className="inline-flex items-center gap-3 bg-white border border-[#E8E8E8] rounded-full px-6 py-3 shadow-sm">
+                <div className="flex items-center gap-0.5">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      size={18}
+                      className="text-[#C9A96E]"
+                      fill={n <= Math.round(resumenGoogle.promedio) ? "currentColor" : "none"}
+                      strokeWidth={1.5}
+                    />
+                  ))}
+                </div>
+                <span className="font-serif text-xl text-[#1A1A1A]">{resumenGoogle.promedio}</span>
+                <span className="text-[#5A5A5A] text-sm">
+                  ({resumenGoogle.total} {resumenGoogle.total === 1 ? "reseña" : "reseñas"})
+                </span>
+              </div>
+            </div>
+          </FadeIn>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {RESENAS.slice(0, 6).map((r, index) => (
+              <FadeIn key={r.id} delay={index * 100}>
+                <div className="bg-white p-6 rounded-lg border border-[#E8E8E8] h-full flex flex-col shadow-sm">
+                  <div className="flex items-center gap-0.5 mb-3">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star key={n} size={14} className="text-[#C9A96E]" fill={n <= r.calificacion ? "currentColor" : "none"} strokeWidth={1.5} />
+                    ))}
+                  </div>
+                  <p className="text-[#333] text-sm leading-relaxed mb-4 flex-grow">"{r.texto}"</p>
+                  <div className="flex items-center justify-between pt-3 border-t border-[#F0F0F0]">
+                    <span className="font-medium text-[#1A1A1A] text-sm">{r.autor}</span>
+                    {r.fechaTexto && <span className="text-[#A0A0A0] text-xs">{r.fechaTexto}</span>}
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+
+          <FadeIn delay={300}>
+            <div className="text-center mt-10">
+              <a
+                href={CONTACT.mapLinkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-outline px-8 py-3 rounded-sm font-medium tracking-wide text-sm inline-flex items-center gap-2"
+              >
+                Ver todas las reseñas en Google <ChevronRight size={16} />
+              </a>
+            </div>
+          </FadeIn>
+        </section>
+      )}
       <footer className="bg-[#1A1A1A] border-t border-[#333] pt-20 pb-10 px-6 lg:px-12 text-[#A0A0A0] font-light">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">

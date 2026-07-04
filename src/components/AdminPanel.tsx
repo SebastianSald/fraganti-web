@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { Search, Plus, Trash2, LogOut, Check, X as XIcon, ChevronDown } from "lucide-react";
+import { Search, Plus, Trash2, LogOut, Check, X as XIcon, ChevronDown, Star } from "lucide-react";
 import { supabase, supabaseConfigured } from "../lib/supabaseClient";
 import {
   loadPerfumes, actualizarPerfume, crearPerfume, eliminarPerfume, nuevoPerfumeVacio,
@@ -9,6 +9,7 @@ import {
 } from "../data/perfumes";
 
 import { loadCupones, crearCupon, actualizarCupon, eliminarCupon, type Cupon, type TipoCupon } from "../data/cupones";
+import { loadResenas, crearResena, actualizarResena, eliminarResena, type Resena } from "../data/resenas";
 
 // ============================================================================
 // Panel de administración — /admin
@@ -129,41 +130,68 @@ function FormatRow({
   formatKey, info, onChange,
 }: {
   formatKey: FormatoKey;
-  info: { disponible: boolean; precio: string; stock: number };
-  onChange: (next: { disponible: boolean; precio: string; stock: number }) => void;
+  info: { disponible: boolean; precio: string; precioAntes?: string; stock: number };
+  onChange: (next: { disponible: boolean; precio: string; precioAntes?: string; stock: number }) => void;
 }) {
+  const antes = parseInt((info.precioAntes || "").replace(/[^\d]/g, ""), 10) || 0;
+  const ahora = parseInt((info.precio || "").replace(/[^\d]/g, ""), 10) || 0;
+  const enOferta = antes > 0 && ahora > 0 && antes > ahora;
+  const porcentaje = enOferta ? Math.round(((antes - ahora) / antes) * 100) : 0;
+
   return (
-    <div className={`grid grid-cols-[1.4fr_1fr_0.7fr] gap-3 items-center p-3 rounded border border-[#E5E0D5] mb-2 ${!info.disponible ? "opacity-60" : ""}`} style={{ background: "#FDFBF7" }}>
-      <label className="flex items-center gap-2 text-sm font-medium">
-        <input
-          type="checkbox"
-          checked={info.disponible}
-          onChange={(e) => onChange({ ...info, disponible: e.target.checked })}
-        />
-        {FORMATO_LABELS[formatKey]}
-      </label>
-      <div>
-        <span className="block text-[10px] text-[#A0A0A0]">Precio</span>
-        <input
-          type="text"
-          disabled={!info.disponible}
-          value={info.precio}
-          onChange={(e) => onChange({ ...info, precio: e.target.value })}
-          placeholder="Ej. $195.000"
-          className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white disabled:bg-[#F0EEE9] disabled:text-[#B0B0B0]"
-        />
+    <div className={`p-3 rounded border border-[#E5E0D5] mb-2 ${!info.disponible ? "opacity-60" : ""}`} style={{ background: "#FDFBF7" }}>
+      <div className="grid grid-cols-[1.4fr_1fr_0.7fr] gap-3 items-center">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={info.disponible}
+            onChange={(e) => onChange({ ...info, disponible: e.target.checked })}
+          />
+          {FORMATO_LABELS[formatKey]}
+        </label>
+        <div>
+          <span className="block text-[10px] text-[#A0A0A0]">Precio actual</span>
+          <input
+            type="text"
+            disabled={!info.disponible}
+            value={info.precio}
+            onChange={(e) => onChange({ ...info, precio: e.target.value })}
+            placeholder="Ej. $195.000"
+            className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white disabled:bg-[#F0EEE9] disabled:text-[#B0B0B0]"
+          />
+        </div>
+        <div>
+          <span className="block text-[10px] text-[#A0A0A0]">Stock</span>
+          <input
+            type="number"
+            min={0}
+            disabled={!info.disponible}
+            value={info.stock}
+            onChange={(e) => onChange({ ...info, stock: Number(e.target.value || 0) })}
+            className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white disabled:bg-[#F0EEE9] disabled:text-[#B0B0B0]"
+          />
+        </div>
       </div>
-      <div>
-        <span className="block text-[10px] text-[#A0A0A0]">Stock</span>
-        <input
-          type="number"
-          min={0}
-          disabled={!info.disponible}
-          value={info.stock}
-          onChange={(e) => onChange({ ...info, stock: Number(e.target.value || 0) })}
-          className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white disabled:bg-[#F0EEE9] disabled:text-[#B0B0B0]"
-        />
-      </div>
+
+      {info.disponible && (
+        <div className="mt-2 pt-2 border-t border-[#E5E0D5] flex items-center gap-2">
+          <div className="flex-1">
+            <span className="block text-[10px] text-[#A0A0A0]">Precio antes (déjalo vacío si no hay oferta)</span>
+            <input
+              type="text"
+              value={info.precioAntes || ""}
+              onChange={(e) => onChange({ ...info, precioAntes: e.target.value })}
+              placeholder="Ej. $250.000"
+              className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white"
+            />
+          </div>
+          {enOferta && (
+            <span className="text-[10px] bg-red-600 text-white font-bold px-2 py-1 rounded-full whitespace-nowrap mt-3">
+              OFERTA -{porcentaje}%
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -187,6 +215,13 @@ function PerfumeCard({
   const dirty = JSON.stringify(draft) !== JSON.stringify(perfume);
   const agotado = FORMATO_ORDEN.filter(k => draft.formatos[k].disponible)
     .every(k => draft.formatos[k].stock <= 0) || FORMATO_ORDEN.every(k => !draft.formatos[k].disponible);
+  const enOferta = FORMATO_ORDEN.some(k => {
+    const f = draft.formatos[k];
+    if (!f.disponible || !f.precioAntes) return false;
+    const antes = parseInt(f.precioAntes.replace(/[^\d]/g, ""), 10) || 0;
+    const ahora = parseInt(f.precio.replace(/[^\d]/g, ""), 10) || 0;
+    return antes > ahora && ahora > 0;
+  });
 
   const guardar = async () => {
     setSaving(true);
@@ -227,6 +262,7 @@ function PerfumeCard({
         />
         <span className="font-serif text-xl">{draft.name || "(Sin nombre)"}</span>
         {agotado && <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full font-semibold">AGOTADO</span>}
+        {!agotado && enOferta && <span className="text-[10px] bg-[#C9A96E] text-[#1A1A1A] px-2 py-0.5 rounded-full font-semibold">OFERTA</span>}
         <span className="ml-auto text-xs uppercase tracking-wide text-[#B89250]">{draft.family} · {draft.genero}</span>
         <ChevronDown size={18} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
@@ -466,8 +502,147 @@ function CuponesPanel() {
   );
 }
 
+function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          className="text-[#C9A96E]"
+          aria-label={`${n} estrellas`}
+        >
+          <Star size={22} fill={n <= value ? "currentColor" : "none"} strokeWidth={1.5} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ResenaForm({ onCreated }: { onCreated: (r: Resena) => void }) {
+  const [autor, setAutor] = useState("");
+  const [calificacion, setCalificacion] = useState(5);
+  const [texto, setTexto] = useState("");
+  const [fechaTexto, setFechaTexto] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const crear = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!autor.trim() || !texto.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const nueva = await crearResena({ autor, calificacion, texto, fechaTexto, orden: 0 });
+      onCreated(nueva);
+      setAutor("");
+      setCalificacion(5);
+      setTexto("");
+      setFechaTexto("");
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={crear} className="bg-white rounded-lg border border-[#E5E0D5] p-5 mb-6">
+      <h3 className="font-serif text-lg mb-1">Agregar reseña de Google</h3>
+      <p className="text-xs text-[#A0A0A0] mb-4">Copia y pega el nombre y el texto tal cual aparecen en tu Perfil de Negocio de Google.</p>
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">Nombre del cliente</label>
+          <input value={autor} onChange={(e) => setAutor(e.target.value)} placeholder="Ej. María Fernanda G." className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm" />
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">Fecha (como la copiaste, opcional)</label>
+          <input value={fechaTexto} onChange={(e) => setFechaTexto(e.target.value)} placeholder="Ej. Hace 2 semanas" className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm" />
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">Calificación</label>
+        <StarPicker value={calificacion} onChange={setCalificacion} />
+      </div>
+
+      <div className="mb-3">
+        <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">Texto de la reseña</label>
+        <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={3} placeholder="Pega aquí el comentario del cliente..." className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm resize-none" />
+      </div>
+
+      {error && <p className="text-red-600 text-xs mb-3">{error}</p>}
+      <button
+        type="submit"
+        disabled={saving || !autor.trim() || !texto.trim()}
+        className="px-5 py-2 rounded text-sm font-medium text-[#1A1A1A] disabled:opacity-40"
+        style={{ background: "linear-gradient(135deg, #D4AF37 0%, #C9A96E 100%)" }}
+      >
+        {saving ? "Agregando..." : "Agregar reseña"}
+      </button>
+    </form>
+  );
+}
+
+function ResenasPanel() {
+  const [resenas, setResenas] = useState<Resena[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadResenas().then(setResenas).catch((e) => setError(e.message)).finally(() => setLoading(false));
+  }, []);
+
+  const borrar = async (id: number) => {
+    if (!confirm("¿Eliminar esta reseña?")) return;
+    try {
+      await eliminarResena(id);
+      setResenas((prev) => prev.filter((x) => x.id !== id));
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  return (
+    <div>
+      <ResenaForm onCreated={(r) => setResenas((prev) => [r, ...prev])} />
+
+      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+      {loading && <p className="text-[#5A5A5A] text-sm">Cargando reseñas...</p>}
+
+      {!loading && resenas.length === 0 && (
+        <p className="text-center text-[#A0A0A0] py-10 text-sm">Todavía no has agregado ninguna reseña.</p>
+      )}
+
+      <div className="space-y-3">
+        {resenas.map((r) => (
+          <div key={r.id} className="bg-white rounded-lg border border-[#E5E0D5] p-4">
+            <div className="flex items-start justify-between mb-1.5">
+              <div>
+                <p className="font-medium text-[#1A1A1A] text-sm">{r.autor}</p>
+                <div className="flex items-center gap-0.5 my-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star key={n} size={13} className="text-[#C9A96E]" fill={n <= r.calificacion ? "currentColor" : "none"} strokeWidth={1.5} />
+                  ))}
+                  {r.fechaTexto && <span className="text-[10px] text-[#A0A0A0] ml-2">{r.fechaTexto}</span>}
+                </div>
+              </div>
+              <button onClick={() => borrar(r.id)} className="text-[#C9C4B8] hover:text-red-600 transition-colors">
+                <Trash2 size={15} />
+              </button>
+            </div>
+            <p className="text-sm text-[#5A5A5A]">{r.texto}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({ onLogout }: { onLogout: () => void }) {
-  const [tab, setTab] = useState<"perfumes" | "cupones">("perfumes");
+  const [tab, setTab] = useState<"perfumes" | "cupones" | "resenas">("perfumes");
   const [perfumes, setPerfumes] = useState<Perfume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -525,12 +700,20 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           >
             Cupones
           </button>
+          <button
+            onClick={() => setTab("resenas")}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-colors ${tab === "resenas" ? "bg-[#C9A96E] text-[#1A1A1A]" : "text-[#A0A0A0] hover:text-white"}`}
+          >
+            Reseñas
+          </button>
         </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-6 pt-8">
         {tab === "cupones" ? (
           <CuponesPanel />
+        ) : tab === "resenas" ? (
+          <ResenasPanel />
         ) : (
           <>
             <div className="relative mb-6">
