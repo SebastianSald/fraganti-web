@@ -19,8 +19,14 @@ export type FormatoKey = "completo" | "decant5" | "decant10";
 export interface FormatoInfo {
   /** Si el negocio ofrece este perfume en este formato (aunque esté agotado). */
   disponible: boolean;
-  /** Precio en texto, ej. "$195.000". */
+  /** Precio actual (el que se cobra), en texto, ej. "$195.000". */
   precio: string;
+  /**
+   * Precio antes del descuento (opcional). Si está lleno y es mayor al
+   * precio actual, el formato se muestra "en oferta": el precio anterior
+   * tachado y el actual resaltado. Déjalo vacío si no hay descuento.
+   */
+  precioAntes?: string;
   /** Unidades en stock. 0 = agotado (pero sigue mostrándose si disponible=true). */
   stock: number;
 }
@@ -56,10 +62,39 @@ export const FORMATO_LABELS: Record<FormatoKey, string> = {
 };
 
 const FORMATOS_VACIOS = {
-  completo: { disponible: true, precio: "", stock: 0 },
-  decant5: { disponible: false, precio: "", stock: 0 },
-  decant10: { disponible: false, precio: "", stock: 0 },
+  completo: { disponible: true, precio: "", precioAntes: "", stock: 0 },
+  decant5: { disponible: false, precio: "", precioAntes: "", stock: 0 },
+  decant10: { disponible: false, precio: "", precioAntes: "", stock: 0 },
 };
+
+/** true si este formato tiene un precio anterior mayor al actual (está en oferta). */
+export function formatoEnOferta(info: FormatoInfo): boolean {
+  if (!info.precioAntes) return false;
+  const antes = parsePrecioCOPLocal(info.precioAntes);
+  const ahora = parsePrecioCOPLocal(info.precio);
+  return antes > 0 && ahora > 0 && antes > ahora;
+}
+
+/** true si el perfume tiene AL MENOS un formato ofrecido en oferta. */
+export function perfumeEnOferta(p: Perfume): boolean {
+  return formatosOfrecidos(p).some((k) => formatoEnOferta(p.formatos[k]));
+}
+
+/** Porcentaje de descuento redondeado, ej. 25 para "-25%". Null si no aplica. */
+export function porcentajeDescuento(info: FormatoInfo): number | null {
+  if (!formatoEnOferta(info)) return null;
+  const antes = parsePrecioCOPLocal(info.precioAntes!);
+  const ahora = parsePrecioCOPLocal(info.precio);
+  return Math.round(((antes - ahora) / antes) * 100);
+}
+
+// Copia local mínima de parsePrecioCOP (la "oficial" vive en CartContext.tsx,
+// pero este archivo no debe importar de un componente para evitar dependencias
+// circulares — es una función de una línea, se mantiene igual en ambos lados).
+function parsePrecioCOPLocal(texto: string): number {
+  const soloDigitos = (texto || "").replace(/[^\d]/g, "");
+  return soloDigitos ? parseInt(soloDigitos, 10) : 0;
+}
 
 /** Formatos que el negocio ofrece para este perfume (disponible=true), en orden fijo. */
 export function formatosOfrecidos(p: Perfume): FormatoKey[] {
