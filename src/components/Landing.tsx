@@ -6,11 +6,11 @@ import {
   Sparkles, Citrus, Star
 } from "lucide-react";
 import {
-  loadPerfumes, FAMILIES, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS,
+  loadPerfumes, FAMILIES, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS, calcularMatchDelQuiz,
   formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
-  type Perfume, type FormatoKey, type Genero,
+  type Perfume, type FormatoKey, type Genero, type QuizOption,
 } from "../data/perfumes";
-import { useCart, parsePrecioCOP } from "../context/CartContext";
+import { useCart, parsePrecioCOP, formatearCOP } from "../context/CartContext";
 import { CartDrawer } from "./CartDrawer";
 import { QuickViewModal } from "./QuickViewModal";
 
@@ -257,10 +257,11 @@ export function Landing() {
   const [filtroFamilias, setFiltroFamilias] = useState<string[]>([]);
   const [filtroGeneros, setFiltroGeneros] = useState<Genero[]>([]);
   const [filtroAromas, setFiltroAromas] = useState<string[]>([]);
+  const [soloDecants, setSoloDecants] = useState(false);
   const [panelFiltrosAbierto, setPanelFiltrosAbierto] = useState(false);
   
   const [quizStep, setQuizStep] = useState(0);
-  const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
+  const [quizAnswers, setQuizAnswers] = useState<QuizOption[]>([]);
   const [quizAnimating, setQuizAnimating] = useState(false);
 
   const [quickViewId, setQuickViewId] = useState<number | null>(null);
@@ -291,11 +292,11 @@ export function Landing() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleQuizAnswer = (answer: string) => {
+  const handleQuizAnswer = (option: QuizOption) => {
     if (quizAnimating) return;
     setQuizAnimating(true);
     setTimeout(() => {
-      setQuizAnswers([...quizAnswers, answer]);
+      setQuizAnswers([...quizAnswers, option]);
       setQuizStep(prev => prev + 1);
       setQuizAnimating(false);
     }, 400);
@@ -323,13 +324,14 @@ export function Landing() {
   const toggleEnLista = <T,>(lista: T[], valor: T): T[] =>
     lista.includes(valor) ? lista.filter((v) => v !== valor) : [...lista, valor];
 
-  const hayFiltrosActivos = filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || searchTerm.trim() !== "";
+  const hayFiltrosActivos = filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || searchTerm.trim() !== "";
 
   const limpiarFiltros = () => {
     setSearchTerm("");
     setFiltroFamilias([]);
     setFiltroGeneros([]);
     setFiltroAromas([]);
+    setSoloDecants(false);
     setOrden("relevancia");
   };
 
@@ -354,6 +356,10 @@ export function Landing() {
         const notasPerfume = [...p.notas.salida, ...p.notas.corazon, ...p.notas.fondo];
         return filtroAromas.some((aroma) => notasPerfume.includes(aroma));
       });
+    }
+
+    if (soloDecants) {
+      lista = lista.filter((p) => p.formatos.decant5.disponible || p.formatos.decant10.disponible);
     }
 
     const ordenada = [...lista];
@@ -383,7 +389,41 @@ export function Landing() {
     }
 
     return ordenada;
-  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroAromas, orden]);
+  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroAromas, soloDecants, orden]);
+
+  // Perfumes que sí se venden en decant (5ml o 10ml) — para la sección de Decants.
+  const productosConDecants = React.useMemo(
+    () => PRODUCTS.filter((p) => p.formatos.decant5.disponible || p.formatos.decant10.disponible),
+    [PRODUCTS]
+  );
+
+  const precioDecantMinimo = React.useMemo(() => {
+    let minimo = Number.POSITIVE_INFINITY;
+    productosConDecants.forEach((p) => {
+      (["decant5", "decant10"] as const).forEach((key) => {
+        const f = p.formatos[key];
+        if (f.disponible) {
+          const precio = parsePrecioCOP(f.precio);
+          if (precio > 0 && precio < minimo) minimo = precio;
+        }
+      });
+    });
+    return minimo === Number.POSITIVE_INFINITY ? null : minimo;
+  }, [productosConDecants]);
+
+  const irADecants = () => {
+    limpiarFiltros();
+    setSoloDecants(true);
+    setTimeout(() => {
+      document.getElementById("coleccion")?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  };
+
+  // Perfume real del catálogo que mejor encaja con las respuestas del test.
+  const quizMatch = React.useMemo(() => {
+    if (quizAnswers.length < QUIZ_QUESTIONS.length) return null;
+    return calcularMatchDelQuiz(quizAnswers, PRODUCTS);
+  }, [quizAnswers, PRODUCTS]);
 
   return (
     <div className="min-h-screen bg-[#F8F5F2] text-[#1A1A1A] font-poppins selection:bg-[#C9A96E] selection:text-white">
@@ -683,6 +723,16 @@ export function Landing() {
                 </button>
               ))}
               <button
+                onClick={() => setSoloDecants((v) => !v)}
+                className={`px-5 py-2 rounded-full text-sm border transition-all duration-300 flex items-center gap-1.5 ${
+                  soloDecants
+                  ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
+                  : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                }`}
+              >
+                <Droplets size={14} /> Solo Decants
+              </button>
+              <button
                 onClick={() => setPanelFiltrosAbierto((v) => !v)}
                 className={`px-5 py-2 rounded-full text-sm border transition-all duration-300 flex items-center gap-1.5 ${
                   panelFiltrosAbierto || filtroGeneros.length > 0 || filtroAromas.length > 0
@@ -837,21 +887,21 @@ export function Landing() {
                       onClick={() => handleQuizAnswer(option)}
                       className="px-6 py-5 rounded-lg border border-[#E0E0E0] text-left hover:border-[#C9A96E] hover:bg-[#FDFBF7] hover:shadow-sm transition-all group relative overflow-hidden"
                     >
-                      <span className="relative z-10 font-medium text-[#333] group-hover:text-[#1A1A1A]">{option}</span>
+                      <span className="relative z-10 font-medium text-[#333] group-hover:text-[#1A1A1A]">{option.label}</span>
                       <div className="absolute top-0 right-0 h-full w-1 bg-[#C9A96E] transform translate-x-full group-hover:translate-x-0 transition-transform"></div>
                     </button>
                   ))}
                 </div>
               </div>
-            ) : (
+            ) : quizMatch ? (
               <div className={`transition-all duration-700 ease-out flex flex-col md:flex-row gap-8 items-center ${quizAnimating ? "opacity-0 scale-95 blur-sm" : "opacity-100 scale-100 blur-0"}`}>
                 <div className="w-full md:w-1/2 flex justify-center">
                   <div className="relative">
                     <div className="absolute inset-0 bg-[#C9A96E] rounded-full blur-[60px] opacity-20"></div>
-                    <img 
-                      src={`/images/${quizAnswers[3] === "Floral" ? "fraganti-prod2.jpg" : quizAnswers[3] === "Amaderado" ? "fraganti-prod3.jpg" : "fraganti-prod1.jpg"}`}
-                      alt="Tu perfume ideal" 
-                      className="w-48 h-auto relative z-10 mix-blend-multiply drop-shadow-2xl"
+                    <img
+                      src={`/images/${quizMatch.image}`}
+                      alt={quizMatch.name}
+                      className="w-48 h-48 object-cover rounded-full relative z-10 drop-shadow-2xl border-4 border-white"
                     />
                   </div>
                 </div>
@@ -860,17 +910,20 @@ export function Landing() {
                     <Star size={12} fill="currentColor" /> Tu Match Perfecto
                   </span>
                   <h3 className="font-serif text-3xl md:text-4xl text-[#1A1A1A] mb-2">
-                    {quizAnswers[3] === "Floral" ? "Fleur de Jasmin" : quizAnswers[3] === "Amaderado" ? "Terre d'Hermès" : "Oud Noir"}
+                    {quizMatch.name}
                   </h3>
                   <p className="font-serif italic text-[#5A5A5A] mb-6 text-lg">
-                    Basado en tu estilo {quizAnswers[0]?.toLowerCase()} y preferencia {quizAnswers[3]?.toLowerCase()}.
+                    {quizMatch.family} · {quizMatch.notasCorta}
                   </p>
                   <p className="text-[#333] text-sm leading-relaxed mb-8">
-                    Esta fragancia captura la esencia que buscas para una {quizAnswers[1]?.toLowerCase()}. Sus notas envuelven con un toque {quizAnswers[2]?.toLowerCase()}, creando un aura inolvidable.
+                    Basado en tu estilo <strong>{quizAnswers[0]?.label.toLowerCase()}</strong> y tu preferencia por notas <strong>{quizAnswers[3]?.label.toLowerCase()}</strong>, esta fragancia de nuestra colección es la que mejor encaja contigo.
                   </p>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center">
-                    <button className="btn-gold px-8 py-4 rounded-sm font-medium tracking-wide text-sm w-full sm:w-auto">
+                    <button
+                      onClick={() => setQuickViewId(quizMatch.id)}
+                      className="btn-gold px-8 py-4 rounded-sm font-medium tracking-wide text-sm w-full sm:w-auto"
+                    >
                       VER PERFUME
                     </button>
                     <button onClick={resetQuiz} className="text-[#A0A0A0] text-sm underline hover:text-[#1A1A1A] transition-colors">
@@ -878,6 +931,11 @@ export function Landing() {
                     </button>
                   </div>
                 </div>
+              </div>
+            ) : (
+              <div className="text-center text-[#5A5A5A]">
+                <p className="mb-4">Todavía estamos cargando el catálogo — dale un segundo e inténtalo de nuevo.</p>
+                <button onClick={resetQuiz} className="text-[#C9A96E] underline text-sm">Reintentar</button>
               </div>
             )}
           </div>
@@ -912,15 +970,42 @@ export function Landing() {
               </li>
               <li className="flex items-center text-[#F8F5F2]">
                 <Check size={18} className="text-[#C9A96E] mr-3 shrink-0" />
-                <span className="font-light">Opciones de lujo desde $25.000 COP</span>
+                <span className="font-light">
+                  {precioDecantMinimo
+                    ? <>Opciones de lujo desde <strong className="text-[#C9A96E] font-medium">{formatearCOP(precioDecantMinimo)}</strong></>
+                    : "Opciones de lujo a precios accesibles"}
+                </span>
               </li>
               <li className="flex items-center text-[#F8F5F2]">
                 <Check size={18} className="text-[#C9A96E] mr-3 shrink-0" />
                 <span className="font-light">Envío rápido a nivel nacional en 24/48 horas</span>
               </li>
             </ul>
+
+            {/* Vista previa real de perfumes disponibles en decant */}
+            {productosConDecants.length > 0 && (
+              <div className="flex gap-4 mb-10 overflow-x-auto custom-scrollbar pb-2 -mx-1 px-1">
+                {productosConDecants.slice(0, 4).map((p) => {
+                  const key = (["decant5", "decant10"] as const).find((k) => p.formatos[k].disponible)!;
+                  const info = p.formatos[key];
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setQuickViewId(p.id)}
+                      className="flex-shrink-0 w-28 text-left group"
+                    >
+                      <div className="w-28 h-28 rounded-lg overflow-hidden bg-[#2A2A2A] mb-2 border border-[#333] group-hover:border-[#C9A96E]/60 transition-colors">
+                        <img src={`/images/${p.image}`} alt={p.name} className="w-full h-full object-cover mix-blend-multiply bg-[#F5F5DC]/40" />
+                      </div>
+                      <p className="text-[#F8F5F2] text-xs font-medium truncate">{p.name}</p>
+                      <p className="text-[#C9A96E] text-xs">{FORMATO_LABELS[key]} · {info.precio}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             
-            <button className="btn-gold px-10 py-4 rounded-sm font-medium tracking-wide text-sm inline-block">
+            <button onClick={irADecants} className="btn-gold px-10 py-4 rounded-sm font-medium tracking-wide text-sm inline-block w-fit">
               EXPLORAR DECANTS
             </button>
           </FadeIn>

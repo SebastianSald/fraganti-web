@@ -198,21 +198,95 @@ export const FAMILIAS_CATALOGO = [
   "Floral", "Oriental", "Amaderada", "Fresca", "Cítrica", "Floral Oriental", "Chipre", "Gourmand",
 ];
 
-export const QUIZ_QUESTIONS = [
+/**
+ * Cada opción del test suma puntos a una o más familias olfativas REALES
+ * de tu catálogo (las mismas que usas en `family` al cargar un perfume).
+ * Al final se suman los puntos de las 4 respuestas y se recomienda un
+ * perfume de verdad de tu catálogo — nunca un nombre inventado.
+ */
+export interface QuizOption {
+  label: string;
+  pesos: Partial<Record<string, number>>;
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: QuizOption[];
+}
+
+export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     question: "¿Cómo describes tu estilo?",
-    options: ["Elegante", "Casual", "Atrevido", "Romántico"],
+    options: [
+      { label: "Elegante", pesos: { Amaderada: 2, Oriental: 1 } },
+      { label: "Casual", pesos: { Fresca: 2, Cítrica: 1 } },
+      { label: "Atrevido", pesos: { Oriental: 2, Amaderada: 1 } },
+      { label: "Romántico", pesos: { Floral: 2, "Floral Oriental": 1 } },
+    ],
   },
   {
     question: "¿Qué momento describe tu uso ideal?",
-    options: ["Cita romántica", "Reunión de trabajo", "Fiesta", "Día casual"],
+    options: [
+      { label: "Cita romántica", pesos: { Floral: 2, "Floral Oriental": 1 } },
+      { label: "Reunión de trabajo", pesos: { Amaderada: 2, Chipre: 1 } },
+      { label: "Fiesta", pesos: { Oriental: 2, Gourmand: 1 } },
+      { label: "Día casual", pesos: { Fresca: 2, Cítrica: 1 } },
+    ],
   },
   {
     question: "¿Qué sensación buscas transmitir?",
-    options: ["Fresco y limpio", "Cálido y sensual", "Misterioso", "Energizante"],
+    options: [
+      { label: "Fresco y limpio", pesos: { Fresca: 2, Cítrica: 2 } },
+      { label: "Cálido y sensual", pesos: { Oriental: 2, Gourmand: 1 } },
+      { label: "Misterioso", pesos: { Amaderada: 2, Chipre: 1 } },
+      { label: "Energizante", pesos: { Cítrica: 2, Fresca: 1 } },
+    ],
   },
   {
     question: "¿Qué nota olfativa prefieres?",
-    options: ["Floral", "Oriental", "Cítrico", "Amaderado"],
+    options: [
+      { label: "Floral", pesos: { Floral: 3 } },
+      { label: "Oriental", pesos: { Oriental: 3 } },
+      { label: "Cítrico", pesos: { Cítrica: 3 } },
+      { label: "Amaderado", pesos: { Amaderada: 3 } },
+    ],
   },
 ];
+
+/**
+ * Suma los puntos de las respuestas elegidas y devuelve el perfume real del
+ * catálogo que mejor encaja. Si hay empate, prefiere uno que SÍ tenga stock
+ * disponible en algún formato (para no recomendar algo agotado), y entre
+ * esos, el más nuevo.
+ */
+export function calcularMatchDelQuiz(respuestas: QuizOption[], productos: Perfume[]): Perfume | null {
+  if (productos.length === 0) return null;
+
+  const puntosPorFamilia: Record<string, number> = {};
+  for (const r of respuestas) {
+    for (const [familia, puntos] of Object.entries(r.pesos)) {
+      puntosPorFamilia[familia] = (puntosPorFamilia[familia] || 0) + (puntos || 0);
+    }
+  }
+
+  let mejorPuntaje = -1;
+  let candidatos: Perfume[] = [];
+  for (const p of productos) {
+    const puntaje = puntosPorFamilia[p.family] || 0;
+    if (puntaje > mejorPuntaje) {
+      mejorPuntaje = puntaje;
+      candidatos = [p];
+    } else if (puntaje === mejorPuntaje) {
+      candidatos.push(p);
+    }
+  }
+
+  // Si nadie tuvo puntos (catálogo con familias distintas a las del test),
+  // simplemente no hay preferencia clara — cualquier candidato sirve como base.
+  const conStock = candidatos.filter((p) => !perfumeAgotado(p));
+  const pool = conStock.length > 0 ? conStock : candidatos;
+
+  const nuevos = pool.filter((p) => p.isNew);
+  const elegido = nuevos[0] || pool[0];
+  return elegido || null;
+}
