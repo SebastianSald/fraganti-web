@@ -10,6 +10,8 @@ import {
   formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
   type Perfume, type FormatoKey,
 } from "../data/perfumes";
+import { useCart } from "../context/CartContext";
+import { CartDrawer } from "./CartDrawer";
 import { QuickViewModal } from "./QuickViewModal";
 
 // ============================================================================
@@ -113,9 +115,18 @@ function ProductCard({
   const ofrecidos = formatosOfrecidos(product);
   const agotado = perfumeAgotado(product);
   const [selected, setSelected] = useState<FormatoKey | null>(() => primerFormatoDisponible(product));
+  const { addToCart } = useCart();
+  const [agregado, setAgregado] = useState(false);
 
   const selectedInfo = selected ? product.formatos[selected] : null;
   const selectedSinStock = !selectedInfo || selectedInfo.stock <= 0;
+
+  const handleAgregar = () => {
+    if (!selected || agotado || selectedSinStock) return;
+    addToCart(product, selected);
+    setAgregado(true);
+    setTimeout(() => setAgregado(false), 1500);
+  };
 
   return (
     <FadeIn delay={delay} direction="up">
@@ -191,14 +202,18 @@ function ProductCard({
           </p>
 
           <button
+            type="button"
+            onClick={handleAgregar}
             disabled={agotado || selectedSinStock}
             className={`w-full py-3 rounded-sm text-sm tracking-widest font-medium transition-colors ${
               agotado || selectedSinStock
                 ? "border border-[#E0E0E0] text-[#B0B0B0] cursor-not-allowed"
+                : agregado
+                ? "bg-[#1A1A1A] text-[#F8F5F2]"
                 : "btn-outline group-hover:bg-[#1A1A1A] group-hover:text-[#F8F5F2]"
             }`}
           >
-            {agotado || selectedSinStock ? "AGOTADO" : "AGREGAR AL CARRITO"}
+            {agotado || selectedSinStock ? "AGOTADO" : agregado ? "✓ AGREGADO" : "AGREGAR AL CARRITO"}
           </button>
         </div>
       </div>
@@ -219,6 +234,8 @@ export function Landing() {
   const [quickViewId, setQuickViewId] = useState<number | null>(null);
   const [PRODUCTS, setPRODUCTS] = useState<Perfume[]>([]);
   const quickViewProduct = PRODUCTS.find(p => p.id === quickViewId) ?? null;
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cantidadTotal } = useCart();
 
   useEffect(() => {
     loadPerfumes()
@@ -435,9 +452,17 @@ export function Landing() {
             <button className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}>
               <Search size={20} />
             </button>
-            <button className={`hover:text-[#C9A96E] transition-colors relative ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}>
+            <button
+              onClick={() => setIsCartOpen(true)}
+              aria-label="Ver carrito"
+              className={`hover:text-[#C9A96E] transition-colors relative ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}
+            >
               <ShoppingBag size={20} />
-              <span className="absolute -top-1 -right-2 bg-[#C9A96E] text-[#1A1A1A] text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
+              {cantidadTotal > 0 && (
+                <span className="absolute -top-1 -right-2 bg-[#C9A96E] text-[#1A1A1A] text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {cantidadTotal}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -944,6 +969,9 @@ export function Landing() {
 
       {/* QUICK VIEW MODAL — pirámide olfativa de Fragantica */}
       <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewId(null)} />
+
+      {/* CARRITO */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} whatsappNumber={CONTACT.whatsappNumber} />
 
     </div>
   );

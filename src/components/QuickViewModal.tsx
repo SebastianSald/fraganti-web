@@ -4,6 +4,7 @@ import {
   formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
   type Perfume, type FormatoKey,
 } from "../data/perfumes";
+import { useCart } from "../context/CartContext";
 
 interface QuickViewModalProps {
   product: Perfume | null;
@@ -32,10 +33,13 @@ function NoteRow({ label, values }: { label: string; values: string[] }) {
 
 export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   const [selected, setSelected] = useState<FormatoKey | null>(null);
+  const { addToCart } = useCart();
+  const [agregado, setAgregado] = useState(false);
 
   // Cada vez que se abre un producto distinto, preselecciona su primer formato con stock.
   useEffect(() => {
     if (product) setSelected(primerFormatoDisponible(product));
+    setAgregado(false);
   }, [product?.id]);
 
   if (!product) return null;
@@ -44,6 +48,13 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   const agotado = perfumeAgotado(product);
   const selectedInfo = selected ? product.formatos[selected] : null;
   const selectedSinStock = !selectedInfo || selectedInfo.stock <= 0;
+
+  const handleAgregar = () => {
+    if (!selected || agotado || selectedSinStock) return;
+    addToCart(product, selected);
+    setAgregado(true);
+    setTimeout(() => setAgregado(false), 1500);
+  };
 
   return (
     <div
@@ -139,14 +150,17 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             </div>
 
             <button
+              onClick={handleAgregar}
               disabled={agotado || selectedSinStock}
               className={`w-full py-4 rounded-sm font-medium tracking-wide text-sm mt-auto transition-colors ${
                 agotado || selectedSinStock
                   ? "border border-[#E0E0E0] text-[#B0B0B0] cursor-not-allowed"
+                  : agregado
+                  ? "bg-[#1A1A1A] text-[#F8F5F2]"
                   : "btn-gold"
               }`}
             >
-              {agotado || selectedSinStock ? "AGOTADO" : "AGREGAR AL CARRITO"}
+              {agotado || selectedSinStock ? "AGOTADO" : agregado ? "✓ AGREGADO AL CARRITO" : "AGREGAR AL CARRITO"}
             </button>
           </div>
         </div>

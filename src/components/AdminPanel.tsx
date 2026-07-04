@@ -8,6 +8,8 @@ import {
   type Perfume, type FormatoKey,
 } from "../data/perfumes";
 
+import { loadCupones, crearCupon, actualizarCupon, eliminarCupon, type Cupon, type TipoCupon } from "../data/cupones";
+
 // ============================================================================
 // Panel de administración — /admin
 // Reemplaza al antiguo public/admin/editor.html: ahora requiere iniciar
@@ -323,7 +325,142 @@ function PerfumeCard({
   );
 }
 
+function CuponForm({ onCreated }: { onCreated: (c: Cupon) => void }) {
+  const [codigo, setCodigo] = useState("");
+  const [tipo, setTipo] = useState<TipoCupon>("porcentaje");
+  const [valor, setValor] = useState<number>(10);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const crear = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!codigo.trim()) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const nuevo = await crearCupon({ codigo, tipo, valor, activo: true });
+      onCreated(nuevo);
+      setCodigo("");
+      setValor(10);
+    } catch (e: any) {
+      setError(e.message.includes("duplicate") ? "Ya existe un cupón con ese código." : e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={crear} className="bg-white rounded-lg border border-[#E5E0D5] p-5 mb-6">
+      <h3 className="font-serif text-lg mb-3">Crear nuevo cupón</h3>
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        <div className="col-span-1">
+          <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">Código</label>
+          <input
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value.toUpperCase())}
+            placeholder="VERANO10"
+            className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm uppercase"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">Tipo</label>
+          <select value={tipo} onChange={(e) => setTipo(e.target.value as TipoCupon)} className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm bg-white">
+            <option value="porcentaje">% Porcentaje</option>
+            <option value="fijo">$ Monto fijo</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">
+            Valor {tipo === "porcentaje" ? "(%)" : "($ COP)"}
+          </label>
+          <input
+            type="number"
+            min={0}
+            value={valor}
+            onChange={(e) => setValor(Number(e.target.value || 0))}
+            className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm"
+          />
+        </div>
+      </div>
+      {error && <p className="text-red-600 text-xs mb-3">{error}</p>}
+      <button
+        type="submit"
+        disabled={saving || !codigo.trim()}
+        className="px-5 py-2 rounded text-sm font-medium text-[#1A1A1A] disabled:opacity-40"
+        style={{ background: "linear-gradient(135deg, #D4AF37 0%, #C9A96E 100%)" }}
+      >
+        {saving ? "Creando..." : "Crear cupón"}
+      </button>
+    </form>
+  );
+}
+
+function CuponesPanel() {
+  const [cupones, setCupones] = useState<Cupon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadCupones().then(setCupones).catch((e) => setError(e.message)).finally(() => setLoading(false));
+  }, []);
+
+  const toggleActivo = async (c: Cupon) => {
+    try {
+      await actualizarCupon(c.id, { activo: !c.activo });
+      setCupones((prev) => prev.map((x) => (x.id === c.id ? { ...x, activo: !x.activo } : x)));
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const borrar = async (id: number) => {
+    if (!confirm("¿Eliminar este cupón?")) return;
+    try {
+      await eliminarCupon(id);
+      setCupones((prev) => prev.filter((x) => x.id !== id));
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  return (
+    <div>
+      <CuponForm onCreated={(c) => setCupones((prev) => [...prev, c])} />
+
+      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+      {loading && <p className="text-[#5A5A5A] text-sm">Cargando cupones...</p>}
+
+      {!loading && cupones.length === 0 && (
+        <p className="text-center text-[#A0A0A0] py-10 text-sm">Todavía no has creado ningún cupón.</p>
+      )}
+
+      <div className="space-y-3">
+        {cupones.map((c) => (
+          <div key={c.id} className="bg-white rounded-lg border border-[#E5E0D5] p-4 flex items-center justify-between">
+            <div>
+              <p className="font-mono font-semibold text-[#1A1A1A]">{c.codigo}</p>
+              <p className="text-xs text-[#5A5A5A]">
+                {c.tipo === "porcentaje" ? `${c.valor}% de descuento` : `${c.valor.toLocaleString("es-CO")} COP de descuento`}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-1.5 text-xs cursor-pointer select-none">
+                <input type="checkbox" checked={c.activo} onChange={() => toggleActivo(c)} />
+                {c.activo ? "Activo" : "Inactivo"}
+              </label>
+              <button onClick={() => borrar(c.id)} className="text-[#C9C4B8] hover:text-red-600 transition-colors">
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({ onLogout }: { onLogout: () => void }) {
+  const [tab, setTab] = useState<"perfumes" | "cupones">("perfumes");
   const [perfumes, setPerfumes] = useState<Perfume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -358,56 +495,78 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="min-h-screen bg-[#F8F5F2] font-sans pb-24">
-      <header className="bg-[#1A1A1A] text-white px-6 py-5 flex items-center justify-between sticky top-0 z-10">
-        <div>
-          <h1 className="font-serif text-2xl tracking-wide text-[#C9A96E]">FRAGANTI</h1>
-          <p className="text-xs text-[#A0A0A0]">Panel de administración — {perfumes.length} perfumes</p>
+      <header className="bg-[#1A1A1A] text-white px-6 py-5 sticky top-0 z-10">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="font-serif text-2xl tracking-wide text-[#C9A96E]">FRAGANTI</h1>
+            <p className="text-xs text-[#A0A0A0]">Panel de administración — {perfumes.length} perfumes</p>
+          </div>
+          <button onClick={onLogout} className="flex items-center gap-2 text-sm border border-[#333] rounded px-4 py-2 hover:bg-[#333] transition-colors">
+            <LogOut size={15} /> Cerrar sesión
+          </button>
         </div>
-        <button onClick={onLogout} className="flex items-center gap-2 text-sm border border-[#333] rounded px-4 py-2 hover:bg-[#333] transition-colors">
-          <LogOut size={15} /> Cerrar sesión
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTab("perfumes")}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-colors ${tab === "perfumes" ? "bg-[#C9A96E] text-[#1A1A1A]" : "text-[#A0A0A0] hover:text-white"}`}
+          >
+            Perfumes
+          </button>
+          <button
+            onClick={() => setTab("cupones")}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-colors ${tab === "cupones" ? "bg-[#C9A96E] text-[#1A1A1A]" : "text-[#A0A0A0] hover:text-white"}`}
+          >
+            Cupones
+          </button>
+        </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-6 pt-8">
-        <div className="relative mb-6">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A0A0A0]" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar perfume por nombre..."
-            className="w-full pl-9 pr-4 py-3 rounded border border-[#E0E0E0] bg-white text-sm outline-none focus:border-[#C9A96E]"
-          />
-        </div>
+        {tab === "cupones" ? (
+          <CuponesPanel />
+        ) : (
+          <>
+            <div className="relative mb-6">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A0A0A0]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar perfume por nombre..."
+                className="w-full pl-9 pr-4 py-3 rounded border border-[#E0E0E0] bg-white text-sm outline-none focus:border-[#C9A96E]"
+              />
+            </div>
 
-        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
-        {loading && <p className="text-[#5A5A5A] text-sm">Cargando catálogo...</p>}
+            {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+            {loading && <p className="text-[#5A5A5A] text-sm">Cargando catálogo...</p>}
 
-        {!loading && visibles.length === 0 && (
-          <p className="text-center text-[#A0A0A0] py-10 text-sm">
-            {search ? `Ningún perfume coincide con "${search}".` : "Todavía no hay perfumes."}
-          </p>
+            {!loading && visibles.length === 0 && (
+              <p className="text-center text-[#A0A0A0] py-10 text-sm">
+                {search ? `Ningún perfume coincide con "${search}".` : "Todavía no hay perfumes."}
+              </p>
+            )}
+
+            {visibles.map((p) => (
+              <div id={`card-${p.id}`} key={p.id}>
+                <PerfumeCard
+                  perfume={p}
+                  isOpen={openId === p.id}
+                  onToggle={() => setOpenId(openId === p.id ? null : p.id)}
+                  onSaved={(updated) => setPerfumes(prev => prev.map(x => x.id === updated.id ? updated : x))}
+                  onDeleted={(id) => setPerfumes(prev => prev.filter(x => x.id !== id))}
+                />
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={agregar}
+              className="w-full py-4 rounded-lg border-2 border-dashed border-[#d1cec7] text-[#5A5A5A] hover:border-[#C9A96E] hover:text-[#1A1A1A] transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Plus size={16} /> Agregar nuevo perfume
+            </button>
+          </>
         )}
-
-        {visibles.map((p) => (
-          <div id={`card-${p.id}`} key={p.id}>
-            <PerfumeCard
-              perfume={p}
-              isOpen={openId === p.id}
-              onToggle={() => setOpenId(openId === p.id ? null : p.id)}
-              onSaved={(updated) => setPerfumes(prev => prev.map(x => x.id === updated.id ? updated : x))}
-              onDeleted={(id) => setPerfumes(prev => prev.filter(x => x.id !== id))}
-            />
-          </div>
-        ))}
-
-        <button
-          type="button"
-          onClick={agregar}
-          className="w-full py-4 rounded-lg border-2 border-dashed border-[#d1cec7] text-[#5A5A5A] hover:border-[#C9A96E] hover:text-[#1A1A1A] transition-colors flex items-center justify-center gap-2 text-sm font-medium"
-        >
-          <Plus size={16} /> Agregar nuevo perfume
-        </button>
       </div>
     </div>
   );
