@@ -6,13 +6,39 @@ import {
   Sparkles, Citrus, Star
 } from "lucide-react";
 import {
-  loadPerfumes, FAMILIES, QUIZ_QUESTIONS,
+  loadPerfumes, FAMILIES, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS,
   formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
-  type Perfume, type FormatoKey,
+  type Perfume, type FormatoKey, type Genero,
 } from "../data/perfumes";
-import { useCart } from "../context/CartContext";
+import { useCart, parsePrecioCOP } from "../context/CartContext";
 import { CartDrawer } from "./CartDrawer";
 import { QuickViewModal } from "./QuickViewModal";
+
+/** Quita tildes y pasa a minúsculas, para que buscar "yara" encuentre "Yara" o "yará". */
+function normalizarTexto(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+/** Precio de referencia para ordenar por precio: el del primer formato que el perfume ofrezca. */
+function precioReferencia(p: Perfume): number {
+  const key = primerFormatoDisponible(p) ?? (["completo", "decant5", "decant10"] as const).find((k) => p.formatos[k]?.disponible);
+  if (!key) return Number.POSITIVE_INFINITY;
+  const precio = parsePrecioCOP(p.formatos[key].precio);
+  return precio > 0 ? precio : Number.POSITIVE_INFINITY;
+}
+
+type OrdenCatalogo = "relevancia" | "nombre-asc" | "nombre-desc" | "precio-asc" | "precio-desc";
+
+const OPCIONES_ORDEN: { value: OrdenCatalogo; label: string }[] = [
+  { value: "relevancia", label: "Más recientes" },
+  { value: "nombre-asc", label: "Nombre: A-Z" },
+  { value: "nombre-desc", label: "Nombre: Z-A" },
+  { value: "precio-asc", label: "Precio: menor a mayor" },
+  { value: "precio-desc", label: "Precio: mayor a menor" },
+];
 
 // ============================================================================
 // DATOS DE CONTACTO — edita aquí si cambian tus redes o tu número.
@@ -225,7 +251,13 @@ export function Landing() {
   const [isLoading, setIsLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("Todos");
+  // Búsqueda, orden y filtros de la colección
+  const [searchTerm, setSearchTerm] = useState("");
+  const [orden, setOrden] = useState<OrdenCatalogo>("relevancia");
+  const [filtroFamilias, setFiltroFamilias] = useState<string[]>([]);
+  const [filtroGeneros, setFiltroGeneros] = useState<Genero[]>([]);
+  const [filtroAromas, setFiltroAromas] = useState<string[]>([]);
+  const [panelFiltrosAbierto, setPanelFiltrosAbierto] = useState(false);
   
   const [quizStep, setQuizStep] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
@@ -278,9 +310,80 @@ export function Landing() {
     }, 400);
   };
 
-  const filteredProducts = activeFilter === "Todos" 
-    ? PRODUCTS 
-    : PRODUCTS.filter(p => p.family.includes(activeFilter) || p.family === activeFilter);
+  // Todos los aromas/notas distintos que existen en el catálogo actual,
+  // para armar el filtro de "Aroma" dinámicamente (no hay que mantenerlo a mano).
+  const todosLosAromas = React.useMemo(() => {
+    const set = new Set<string>();
+    PRODUCTS.forEach((p) => {
+      [...p.notas.salida, ...p.notas.corazon, ...p.notas.fondo].forEach((n) => set.add(n));
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
+  }, [PRODUCTS]);
+
+  const toggleEnLista = <T,>(lista: T[], valor: T): T[] =>
+    lista.includes(valor) ? lista.filter((v) => v !== valor) : [...lista, valor];
+
+  const hayFiltrosActivos = filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || searchTerm.trim() !== "";
+
+  const limpiarFiltros = () => {
+    setSearchTerm("");
+    setFiltroFamilias([]);
+    setFiltroGeneros([]);
+    setFiltroAromas([]);
+    setOrden("relevancia");
+  };
+
+  const filteredProducts = React.useMemo(() => {
+    let lista = PRODUCTS;
+
+    if (searchTerm.trim()) {
+      const termino = normalizarTexto(searchTerm.trim());
+      lista = lista.filter((p) => normalizarTexto(p.name).includes(termino));
+    }
+
+    if (filtroFamilias.length > 0) {
+      lista = lista.filter((p) => filtroFamilias.includes(p.family));
+    }
+
+    if (filtroGeneros.length > 0) {
+      lista = lista.filter((p) => filtroGeneros.includes(p.genero));
+    }
+
+    if (filtroAromas.length > 0) {
+      lista = lista.filter((p) => {
+        const notasPerfume = [...p.notas.salida, ...p.notas.corazon, ...p.notas.fondo];
+        return filtroAromas.some((aroma) => notasPerfume.includes(aroma));
+      });
+    }
+
+    const ordenada = [...lista];
+    switch (orden) {
+      case "nombre-asc":
+        ordenada.sort((a, b) => a.name.localeCompare(b.name, "es"));
+        break;
+      case "nombre-desc":
+        ordenada.sort((a, b) => b.name.localeCompare(a.name, "es"));
+        break;
+      case "precio-asc":
+        ordenada.sort((a, b) => precioReferencia(a) - precioReferencia(b));
+        break;
+      case "precio-desc":
+        ordenada.sort((a, b) => {
+          const pa = precioReferencia(a);
+          const pb = precioReferencia(b);
+          // Los que no tienen precio (agotados/sin formato) siempre quedan al final,
+          // sin importar la dirección del orden.
+          if (pa === Number.POSITIVE_INFINITY) return 1;
+          if (pb === Number.POSITIVE_INFINITY) return -1;
+          return pb - pa;
+        });
+        break;
+      default:
+        break; // "relevancia" = orden original del catálogo (más recientes primero)
+    }
+
+    return ordenada;
+  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroAromas, orden]);
 
   return (
     <div className="min-h-screen bg-[#F8F5F2] text-[#1A1A1A] font-poppins selection:bg-[#C9A96E] selection:text-white">
@@ -536,26 +639,109 @@ export function Landing() {
       {/* COLECCIÓN DE PERFUMES */}
       <section id="coleccion" className="py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#F8F5F2]">
         <FadeIn>
-          <div className="flex flex-col items-center mb-16">
+          <div className="flex flex-col items-center mb-12">
             <h2 className="font-serif text-4xl md:text-5xl text-[#1A1A1A] mb-4 text-center">Nuestra Colección</h2>
             <div className="h-[1px] w-24 bg-[#C9A96E] mb-10"></div>
-            
-            {/* Filters */}
-            <div className="flex flex-wrap justify-center gap-3 w-full custom-scrollbar pb-2">
-              {["Todos", "Oriental", "Floral", "Amaderada", "Fresca"].map(filter => (
-                <button 
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-6 py-2 rounded-full text-sm transition-all duration-300 ${
-                    activeFilter === filter 
-                    ? "bg-[#1A1A1A] text-[#F8F5F2] border border-[#1A1A1A]" 
+
+            {/* Búsqueda + Orden */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-2xl mb-5">
+              <div className="relative flex-1">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A0A0A0]" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar perfume por nombre..."
+                  className="w-full pl-11 pr-4 py-3 rounded-full border border-[#d1cec7] bg-white text-sm outline-none focus:border-[#C9A96E] transition-colors"
+                />
+              </div>
+              <select
+                value={orden}
+                onChange={(e) => setOrden(e.target.value as OrdenCatalogo)}
+                className="px-4 py-3 rounded-full border border-[#d1cec7] bg-white text-sm outline-none focus:border-[#C9A96E] cursor-pointer"
+                aria-label="Ordenar por"
+              >
+                {OPCIONES_ORDEN.map((op) => (
+                  <option key={op.value} value={op.value}>{op.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtro rápido por familia olfativa */}
+            <div className="flex flex-wrap justify-center gap-3 w-full pb-2">
+              {FAMILIAS_CATALOGO.map((familia) => (
+                <button
+                  key={familia}
+                  onClick={() => setFiltroFamilias((prev) => toggleEnLista(prev, familia))}
+                  className={`px-5 py-2 rounded-full text-sm transition-all duration-300 ${
+                    filtroFamilias.includes(familia)
+                    ? "bg-[#1A1A1A] text-[#F8F5F2] border border-[#1A1A1A]"
                     : "bg-transparent text-[#5A5A5A] border border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
                   }`}
                 >
-                  {filter}
+                  {familia}
                 </button>
               ))}
+              <button
+                onClick={() => setPanelFiltrosAbierto((v) => !v)}
+                className={`px-5 py-2 rounded-full text-sm border transition-all duration-300 flex items-center gap-1.5 ${
+                  panelFiltrosAbierto || filtroGeneros.length > 0 || filtroAromas.length > 0
+                  ? "bg-[#C9A96E] text-[#1A1A1A] border-[#C9A96E]"
+                  : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                }`}
+              >
+                Más filtros {(filtroGeneros.length + filtroAromas.length) > 0 && `(${filtroGeneros.length + filtroAromas.length})`}
+              </button>
             </div>
+
+            {/* Panel de filtros avanzados: género + aroma */}
+            {panelFiltrosAbierto && (
+              <div className="w-full max-w-3xl bg-white border border-[#E5E0D5] rounded-lg p-6 mt-4 text-left">
+                <div className="mb-5">
+                  <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Género</span>
+                  <div className="flex flex-wrap gap-2">
+                    {GENEROS_CATALOGO.map((genero) => (
+                      <button
+                        key={genero}
+                        onClick={() => setFiltroGeneros((prev) => toggleEnLista(prev, genero))}
+                        className={`px-4 py-1.5 rounded-full text-xs border transition-colors ${
+                          filtroGeneros.includes(genero)
+                          ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
+                          : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                        }`}
+                      >
+                        {genero}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Aroma</span>
+                  <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                    {todosLosAromas.map((aroma) => (
+                      <button
+                        key={aroma}
+                        onClick={() => setFiltroAromas((prev) => toggleEnLista(prev, aroma))}
+                        className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                          filtroAromas.includes(aroma)
+                          ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
+                          : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                        }`}
+                      >
+                        {aroma}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {hayFiltrosActivos && (
+              <button onClick={limpiarFiltros} className="mt-4 text-sm text-[#C9A96E] underline hover:text-[#1A1A1A] transition-colors">
+                Limpiar todos los filtros
+              </button>
+            )}
           </div>
         </FadeIn>
 
@@ -572,8 +758,8 @@ export function Landing() {
         
         {filteredProducts.length === 0 && (
           <div className="text-center py-20 text-[#5A5A5A]">
-            <p>No se encontraron perfumes en esta categoría.</p>
-            <button onClick={() => setActiveFilter("Todos")} className="mt-4 text-[#C9A96E] underline">Ver todos</button>
+            <p>No se encontraron perfumes con esos filtros.</p>
+            <button onClick={limpiarFiltros} className="mt-4 text-[#C9A96E] underline">Ver todos</button>
           </div>
         )}
       </section>

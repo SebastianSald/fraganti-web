@@ -25,11 +25,17 @@ export interface FormatoInfo {
   stock: number;
 }
 
+/** Para quién está pensado el perfume — se usa como filtro en la tienda. */
+export type Genero = "Masculino" | "Femenino" | "Unisex";
+
+export const GENEROS_CATALOGO: Genero[] = ["Masculino", "Femenino", "Unisex"];
+
 export interface Perfume {
   id: number;
   name: string;
   inspiradoEn?: string;
   family: string;
+  genero: Genero;
   image: string;
   isNew?: boolean;
   notasCorta: string;
@@ -86,6 +92,7 @@ function filaASupaPerfume(row: any): Perfume {
     name: row.name,
     inspiradoEn: row.inspirado_en || "",
     family: row.family,
+    genero: row.genero || "Unisex",
     image: row.image,
     isNew: !!row.is_new,
     notasCorta: row.notas_corta || "",
@@ -99,6 +106,7 @@ function perfumeAFila(p: Partial<Perfume>) {
   if (p.name !== undefined) fila.name = p.name;
   if (p.inspiradoEn !== undefined) fila.inspirado_en = p.inspiradoEn;
   if (p.family !== undefined) fila.family = p.family;
+  if (p.genero !== undefined) fila.genero = p.genero;
   if (p.image !== undefined) fila.image = p.image;
   if (p.isNew !== undefined) fila.is_new = p.isNew;
   if (p.notasCorta !== undefined) fila.notas_corta = p.notasCorta;
@@ -112,7 +120,11 @@ async function cargarDesdeRespaldo(): Promise<Perfume[]> {
   const res = await fetch("/data/perfumes.json", { cache: "no-store" });
   if (!res.ok) throw new Error(`Tampoco se pudo cargar el respaldo (${res.status})`);
   const data = await res.json();
-  return data.map((item: any) => (item.formatos ? item : { ...item, formatos: FORMATOS_VACIOS }));
+  return data.map((item: any) => ({
+    ...item,
+    genero: item.genero || "Unisex",
+    formatos: item.formatos || FORMATOS_VACIOS,
+  }));
 }
 
 /**
@@ -161,6 +173,7 @@ export function nuevoPerfumeVacio(): Omit<Perfume, "id"> {
     name: "",
     inspiradoEn: "",
     family: "Floral",
+    genero: "Unisex",
     image: "",
     isNew: false,
     notasCorta: "",

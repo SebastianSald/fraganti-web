@@ -38,7 +38,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 2,
@@ -82,7 +83,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 3,
@@ -128,7 +130,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 4,
@@ -172,7 +175,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 5,
@@ -219,7 +223,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 6,
@@ -262,7 +267,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 7,
@@ -305,7 +311,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 8,
@@ -347,7 +354,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 9,
@@ -378,7 +386,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 10,
@@ -425,7 +434,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 11,
@@ -472,7 +482,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 12,
@@ -512,7 +523,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 13,
@@ -557,7 +569,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 14,
@@ -599,7 +612,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 15,
@@ -645,7 +659,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 16,
@@ -697,7 +712,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 17,
@@ -742,7 +758,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 18,
@@ -785,7 +802,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 19,
@@ -828,7 +846,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 20,
@@ -875,7 +894,8 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   },
   {
     "id": 21,
@@ -923,6 +943,7 @@
         "precio": "",
         "stock": 0
       }
-    }
+    },
+    "genero": "Unisex"
   }
 ]
