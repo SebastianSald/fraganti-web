@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Menu, X, Search, ShoppingBag, ChevronRight, Phone, 
   MessageCircle, ArrowDown, MapPin, Clock, 
-  Instagram, Check, Droplets, TreePine, 
-  Sparkles, Citrus, Star
+  Instagram, Check, Droplets, Star
 } from "lucide-react";
 import {
-  loadPerfumes, FAMILIES, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS, calcularMatchDelQuiz,
+  loadPerfumes, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS, calcularMatchDelQuiz,
   formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
   type Perfume, type FormatoKey, type Genero, type QuizOption,
 } from "../data/perfumes";
@@ -72,13 +71,6 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
     </svg>
   );
 }
-
-const FAMILY_ICONS: Record<string, React.ReactNode> = {
-  Floral: <Sparkles className="w-8 h-8 text-[#C9A96E]" />,
-  Amaderado: <TreePine className="w-8 h-8 text-[#C9A96E]" />,
-  Cítrico: <Citrus className="w-8 h-8 text-[#C9A96E]" />,
-  Oriental: <Droplets className="w-8 h-8 text-[#C9A96E]" />,
-};
 
 // Intersection Observer Hook for fade-in animations
 function useIntersectionObserver(options: IntersectionObserverInit = {}) {
@@ -814,45 +806,6 @@ export function Landing() {
         )}
       </section>
 
-      {/* EXPERIENCIA SENSORIAL */}
-      <section className="relative py-32 overflow-hidden bg-[#1A1A1A]">
-        <div className="absolute inset-0">
-          <img 
-            src="/images/fraganti-sensory.jpg" 
-            alt="Sensory background" 
-            className="w-full h-full object-cover object-center opacity-40 mix-blend-luminosity"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-[#1A1A1A]"></div>
-        </div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 text-center">
-          <FadeIn>
-            <h2 className="font-serif text-3xl md:text-5xl lg:text-6xl text-[#F8F5F2] font-light leading-snug mb-16 max-w-4xl mx-auto">
-              Cada aroma es una <i className="italic text-[#C9A96E]">memoria</i>.<br />
-              Cada fragancia, una <i className="italic text-[#C9A96E]">emoción</i>.
-            </h2>
-          </FadeIn>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {FAMILIES.map((family, index) => (
-              <FadeIn key={family.name} delay={index * 150} className="bg-[#1C1C1C]/60 backdrop-blur-md border border-[#333] p-8 rounded-lg flex flex-col items-center text-center hover:border-[#C9A96E]/50 transition-colors duration-300">
-                <div className="mb-6 bg-[#2A2A2A] w-16 h-16 rounded-full flex items-center justify-center">
-                  {FAMILY_ICONS[family.name]}
-                </div>
-                <h3 className="font-serif text-xl text-[#F8F5F2] mb-2">{family.name}</h3>
-                <p className="text-[#A0A0A0] text-sm">{family.notes}</p>
-              </FadeIn>
-            ))}
-          </div>
-
-          <FadeIn delay={600}>
-            <button className="btn-outline-cream px-10 py-4 rounded-sm font-medium tracking-widest text-sm hover:border-[#C9A96E] hover:text-[#C9A96E] hover:bg-transparent">
-              DESCUBRE TU FAMILIA OLFATIVA
-            </button>
-          </FadeIn>
-        </div>
-      </section>
-
       {/* TEST DE PERSONALIDAD OLFATIVA */}
       <section id="test" className="py-24 px-6 bg-[#F5F5DC]/40 border-y border-[#E5E0D5]">
         <div className="max-w-4xl mx-auto">
@@ -942,71 +895,90 @@ export function Landing() {
         </div>
       </section>
 
-      {/* DECANTS SECTION */}
-      <section id="decants" className="py-0 flex flex-col lg:flex-row bg-[#1A1A1A] overflow-hidden">
-        <div className="w-full lg:w-1/2 h-[50vh] lg:h-auto relative">
-          <img 
-            src="/images/fraganti-decants.jpg" 
-            alt="Perfume Decants" 
-            className="w-full h-full object-cover"
+      {/* DECANTS SECTION — ahora con más protagonismo gráfico, ya que absorbe el espacio que dejó "Experiencia Sensorial" */}
+      <section id="decants" className="relative py-28 md:py-36 overflow-hidden bg-[#1A1A1A]">
+        <div className="absolute inset-0">
+          <img
+            src="/images/fraganti-decants.jpg"
+            alt="Perfume Decants"
+            className="w-full h-full object-cover opacity-45"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#1A1A1A] hidden lg:block opacity-90"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] to-transparent lg:hidden opacity-90"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-[#1A1A1A]/70 to-[#1A1A1A]/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/60 via-transparent to-[#1A1A1A]/60"></div>
         </div>
-        
-        <div className="w-full lg:w-1/2 py-20 px-8 md:px-16 flex flex-col justify-center">
-          <FadeIn direction="left">
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6 lg:px-12 text-center">
+          <FadeIn>
             <span className="text-[#C9A96E] text-sm font-semibold tracking-widest uppercase mb-4 block">Prueba antes de comprar</span>
-            <h2 className="font-serif text-4xl md:text-5xl text-[#F8F5F2] mb-6 leading-tight">Decants — Tu portal al lujo</h2>
-            
-            <p className="text-[#A0A0A0] text-lg mb-10 font-light max-w-lg">
+            <h2 className="font-serif text-4xl md:text-6xl lg:text-7xl text-[#F8F5F2] font-light mb-6 leading-tight">
+              Decants — <i className="italic text-[#C9A96E]">tu portal</i> al lujo.
+            </h2>
+            <p className="text-[#D9D5CC] text-lg md:text-xl mb-12 font-light max-w-2xl mx-auto">
               Prueba cualquier fragancia premium en presentaciones de <strong className="text-[#F8F5F2] font-medium">5ml y 10ml</strong> antes de invertir en el frasco completo. Portabilidad, exclusividad y la libertad de descubrir nuevos aromas.
             </p>
-            
-            <ul className="space-y-4 mb-10">
-              <li className="flex items-center text-[#F8F5F2]">
-                <Check size={18} className="text-[#C9A96E] mr-3 shrink-0" />
-                <span className="font-light">Frascos atomizadores 100% originales garantizados</span>
-              </li>
-              <li className="flex items-center text-[#F8F5F2]">
-                <Check size={18} className="text-[#C9A96E] mr-3 shrink-0" />
-                <span className="font-light">
-                  {precioDecantMinimo
-                    ? <>Opciones de lujo desde <strong className="text-[#C9A96E] font-medium">{formatearCOP(precioDecantMinimo)}</strong></>
-                    : "Opciones de lujo a precios accesibles"}
-                </span>
-              </li>
-              <li className="flex items-center text-[#F8F5F2]">
-                <Check size={18} className="text-[#C9A96E] mr-3 shrink-0" />
-                <span className="font-light">Envío rápido a nivel nacional en 24/48 horas</span>
-              </li>
-            </ul>
+          </FadeIn>
 
-            {/* Vista previa real de perfumes disponibles en decant */}
-            {productosConDecants.length > 0 && (
-              <div className="flex gap-4 mb-10 overflow-x-auto custom-scrollbar pb-2 -mx-1 px-1">
-                {productosConDecants.slice(0, 4).map((p) => {
+          <FadeIn delay={150}>
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6 mb-16">
+              <div className="flex items-center gap-2.5 bg-[#1C1C1C]/60 backdrop-blur-md border border-[#333] px-5 py-3 rounded-full">
+                <Check size={16} className="text-[#C9A96E] shrink-0" />
+                <span className="text-[#F8F5F2] text-sm font-light">100% originales garantizados</span>
+              </div>
+              <div className="flex items-center gap-2.5 bg-[#1C1C1C]/60 backdrop-blur-md border border-[#333] px-5 py-3 rounded-full">
+                <Check size={16} className="text-[#C9A96E] shrink-0" />
+                <span className="text-[#F8F5F2] text-sm font-light">
+                  {precioDecantMinimo
+                    ? <>Desde <strong className="text-[#C9A96E] font-medium">{formatearCOP(precioDecantMinimo)}</strong></>
+                    : "Precios accesibles"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5 bg-[#1C1C1C]/60 backdrop-blur-md border border-[#333] px-5 py-3 rounded-full">
+                <Check size={16} className="text-[#C9A96E] shrink-0" />
+                <span className="text-[#F8F5F2] text-sm font-light">Envíos en 24/48h a toda Colombia</span>
+              </div>
+            </div>
+          </FadeIn>
+
+          {/* Vitrina real de perfumes disponibles en decant — protagonista visual de la sección */}
+          {productosConDecants.length > 0 ? (
+            <FadeIn delay={250}>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-7 mb-14 max-w-5xl mx-auto">
+                {productosConDecants.slice(0, 8).map((p, index) => {
                   const key = (["decant5", "decant10"] as const).find((k) => p.formatos[k].disponible)!;
                   const info = p.formatos[key];
                   return (
-                    <button
-                      key={p.id}
-                      onClick={() => setQuickViewId(p.id)}
-                      className="flex-shrink-0 w-28 text-left group"
-                    >
-                      <div className="w-28 h-28 rounded-lg overflow-hidden bg-[#2A2A2A] mb-2 border border-[#333] group-hover:border-[#C9A96E]/60 transition-colors">
-                        <img src={`/images/${p.image}`} alt={p.name} className="w-full h-full object-cover mix-blend-multiply bg-[#F5F5DC]/40" />
-                      </div>
-                      <p className="text-[#F8F5F2] text-xs font-medium truncate">{p.name}</p>
-                      <p className="text-[#C9A96E] text-xs">{FORMATO_LABELS[key]} · {info.precio}</p>
-                    </button>
+                    <FadeIn key={p.id} delay={300 + index * 80}>
+                      <button
+                        onClick={() => setQuickViewId(p.id)}
+                        className="group w-full text-left"
+                      >
+                        <div className="relative aspect-square rounded-xl overflow-hidden bg-[#F5F5DC]/10 mb-3 border border-[#333] group-hover:border-[#C9A96E]/70 transition-all duration-300 group-hover:-translate-y-1 shadow-lg shadow-black/20">
+                          <img
+                            src={`/images/${p.image}`}
+                            alt={p.name}
+                            className="w-full h-full object-cover mix-blend-luminosity opacity-90 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-300"
+                          />
+                          <span className="absolute top-2.5 right-2.5 bg-[#C9A96E] text-[#1A1A1A] text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide">
+                            {key === "decant5" ? "5ML" : "10ML"}
+                          </span>
+                        </div>
+                        <p className="text-[#F8F5F2] text-sm font-medium truncate group-hover:text-[#C9A96E] transition-colors">{p.name}</p>
+                        <p className="text-[#A0A0A0] text-xs">{info.precio}</p>
+                      </button>
+                    </FadeIn>
                   );
                 })}
               </div>
-            )}
-            
-            <button onClick={irADecants} className="btn-gold px-10 py-4 rounded-sm font-medium tracking-wide text-sm inline-block w-fit">
-              EXPLORAR DECANTS
+            </FadeIn>
+          ) : (
+            <FadeIn delay={250}>
+              <p className="text-[#A0A0A0] text-sm mb-14 italic">Muy pronto verás aquí nuestra selección de decants disponibles.</p>
+            </FadeIn>
+          )}
+
+          <FadeIn delay={400}>
+            <button onClick={irADecants} className="btn-gold px-10 py-4 rounded-sm font-medium tracking-wide text-sm inline-block">
+              EXPLORAR TODOS LOS DECANTS
             </button>
           </FadeIn>
         </div>
