@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Menu, X, Search, ShoppingBag, ChevronRight, Phone, 
   MessageCircle, ArrowDown, MapPin, Clock, 
-  Instagram, Check, Droplets, Star
+  Instagram, Check, Droplets, Star, SlidersHorizontal, Tag
 } from "lucide-react";
 import {
   loadPerfumes, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS, calcularMatchDelQuiz,
@@ -367,6 +367,18 @@ export function Landing() {
     lista.includes(valor) ? lista.filter((v) => v !== valor) : [...lista, valor];
 
   const hayFiltrosActivos = filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || soloOfertas || searchTerm.trim() !== "";
+
+  // Resumen de todos los filtros activos, como etiquetas individuales que se pueden quitar una por una.
+  const chipsActivos = React.useMemo(() => {
+    const chips: { key: string; label: string; onQuitar: () => void }[] = [];
+    if (searchTerm.trim()) chips.push({ key: "buscar", label: `"${searchTerm.trim()}"`, onQuitar: () => setSearchTerm("") });
+    filtroFamilias.forEach((f) => chips.push({ key: `familia-${f}`, label: f, onQuitar: () => setFiltroFamilias((prev) => prev.filter((x) => x !== f)) }));
+    filtroGeneros.forEach((g) => chips.push({ key: `genero-${g}`, label: g, onQuitar: () => setFiltroGeneros((prev) => prev.filter((x) => x !== g)) }));
+    filtroAromas.forEach((a) => chips.push({ key: `aroma-${a}`, label: a, onQuitar: () => setFiltroAromas((prev) => prev.filter((x) => x !== a)) }));
+    if (soloDecants) chips.push({ key: "decants", label: "Solo Decants", onQuitar: () => setSoloDecants(false) });
+    if (soloOfertas) chips.push({ key: "ofertas", label: "En Oferta", onQuitar: () => setSoloOfertas(false) });
+    return chips;
+  }, [searchTerm, filtroFamilias, filtroGeneros, filtroAromas, soloDecants, soloOfertas]);
 
   const limpiarFiltros = () => {
     setSearchTerm("");
@@ -756,77 +768,120 @@ export function Landing() {
               </select>
             </div>
 
-            {/* Filtro rápido por familia olfativa */}
-            <div className="flex flex-wrap justify-center gap-3 w-full pb-2">
-              {FAMILIAS_CATALOGO.map((familia) => (
+            {/* Resumen de filtros activos — se ve de un vistazo qué está aplicado y se puede quitar uno por uno */}
+            {chipsActivos.length > 0 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 w-full max-w-2xl mb-6">
+                {chipsActivos.map((chip) => (
+                  <button
+                    key={chip.key}
+                    onClick={chip.onQuitar}
+                    className="flex items-center gap-1.5 bg-[#1A1A1A] text-[#F8F5F2] text-xs font-medium pl-3 pr-2 py-1.5 rounded-full hover:bg-[#333] transition-colors"
+                  >
+                    {chip.label}
+                    <X size={12} className="text-[#C9A96E]" />
+                  </button>
+                ))}
                 <button
-                  key={familia}
-                  onClick={() => setFiltroFamilias((prev) => toggleEnLista(prev, familia))}
-                  className={`px-5 py-2 rounded-full text-sm transition-all duration-300 ${
-                    filtroFamilias.includes(familia)
-                    ? "bg-[#1A1A1A] text-[#F8F5F2] border border-[#1A1A1A]"
-                    : "bg-transparent text-[#5A5A5A] border border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
-                  }`}
+                  onClick={limpiarFiltros}
+                  className="text-xs text-[#A0A0A0] underline hover:text-red-600 transition-colors ml-1"
                 >
-                  {familia}
+                  Limpiar todo
                 </button>
-              ))}
-              <button
-                onClick={() => setSoloDecants((v) => !v)}
-                className={`px-5 py-2 rounded-full text-sm border transition-all duration-300 flex items-center gap-1.5 ${
-                  soloDecants
-                  ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
-                  : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
-                }`}
-              >
-                <Droplets size={14} /> Solo Decants
-              </button>
-              <button
-                onClick={() => setSoloOfertas((v) => !v)}
-                className={`px-5 py-2 rounded-full text-sm border transition-all duration-300 flex items-center gap-1.5 ${
-                  soloOfertas
-                  ? "bg-red-600 text-white border-red-600"
-                  : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-red-600 hover:text-red-600"
-                }`}
-              >
-                🏷️ En Oferta
-              </button>
-              <button
-                onClick={() => setPanelFiltrosAbierto((v) => !v)}
-                className={`px-5 py-2 rounded-full text-sm border transition-all duration-300 flex items-center gap-1.5 ${
-                  panelFiltrosAbierto || filtroGeneros.length > 0 || filtroAromas.length > 0
-                  ? "bg-[#C9A96E] text-[#1A1A1A] border-[#C9A96E]"
-                  : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
-                }`}
-              >
-                Más filtros {(filtroGeneros.length + filtroAromas.length) > 0 && `(${filtroGeneros.length + filtroAromas.length})`}
-              </button>
+              </div>
+            )}
+
+            {/* Familia olfativa — el filtro más usado, siempre a la vista */}
+            <div className="w-full max-w-3xl">
+              <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5 text-center sm:text-left">
+                Familia olfativa
+              </span>
+              <div className="flex flex-wrap justify-center sm:justify-start gap-2.5 mb-4">
+                {FAMILIAS_CATALOGO.map((familia) => (
+                  <button
+                    key={familia}
+                    onClick={() => setFiltroFamilias((prev) => toggleEnLista(prev, familia))}
+                    className={`px-5 py-2 rounded-full text-sm transition-all duration-300 ${
+                      filtroFamilias.includes(familia)
+                      ? "bg-[#1A1A1A] text-[#F8F5F2] border border-[#1A1A1A]"
+                      : "bg-transparent text-[#5A5A5A] border border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                    }`}
+                  >
+                    {familia}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Panel de filtros avanzados: género + aroma */}
+            {/* Un solo botón de entrada a los demás filtros — género, presentación y notas — para no mezclar todo en una fila */}
+            <button
+              onClick={() => setPanelFiltrosAbierto((v) => !v)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm border transition-all duration-300 ${
+                panelFiltrosAbierto || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || soloOfertas
+                ? "bg-[#C9A96E] text-[#1A1A1A] border-[#C9A96E]"
+                : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+              }`}
+            >
+              <SlidersHorizontal size={14} />
+              Más filtros
+              {(filtroGeneros.length + filtroAromas.length + Number(soloDecants) + Number(soloOfertas)) > 0 &&
+                ` (${filtroGeneros.length + filtroAromas.length + Number(soloDecants) + Number(soloOfertas)})`}
+              <ChevronRight size={14} className={`transition-transform duration-300 ${panelFiltrosAbierto ? "rotate-90" : ""}`} />
+            </button>
+
+            {/* Panel de filtros avanzados: género, presentación y notas — agrupados y rotulados, no palabras sueltas */}
             {panelFiltrosAbierto && (
-              <div className="w-full max-w-3xl bg-white border border-[#E5E0D5] rounded-lg p-6 mt-4 text-left">
-                <div className="mb-5">
-                  <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Género</span>
-                  <div className="flex flex-wrap gap-2">
-                    {GENEROS_CATALOGO.map((genero) => (
+              <div className="w-full max-w-3xl bg-white border border-[#E5E0D5] rounded-xl p-6 md:p-8 mt-4 text-left">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Género</span>
+                    <div className="flex flex-wrap gap-2">
+                      {GENEROS_CATALOGO.map((genero) => (
+                        <button
+                          key={genero}
+                          onClick={() => setFiltroGeneros((prev) => toggleEnLista(prev, genero))}
+                          className={`px-4 py-1.5 rounded-full text-xs border transition-colors ${
+                            filtroGeneros.includes(genero)
+                            ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
+                            : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                          }`}
+                        >
+                          {genero}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Presentación</span>
+                    <div className="flex flex-wrap gap-2">
                       <button
-                        key={genero}
-                        onClick={() => setFiltroGeneros((prev) => toggleEnLista(prev, genero))}
-                        className={`px-4 py-1.5 rounded-full text-xs border transition-colors ${
-                          filtroGeneros.includes(genero)
+                        onClick={() => setSoloDecants((v) => !v)}
+                        className={`px-4 py-1.5 rounded-full text-xs border transition-colors flex items-center gap-1.5 ${
+                          soloDecants
                           ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
                           : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
                         }`}
                       >
-                        {genero}
+                        <Droplets size={12} /> Solo Decants
                       </button>
-                    ))}
+                      <button
+                        onClick={() => setSoloOfertas((v) => !v)}
+                        className={`px-4 py-1.5 rounded-full text-xs border transition-colors flex items-center gap-1.5 ${
+                          soloOfertas
+                          ? "bg-red-600 text-white border-red-600"
+                          : "border-[#d1cec7] text-[#5A5A5A] hover:border-red-600 hover:text-red-600"
+                        }`}
+                      >
+                        <Tag size={12} /> En Oferta
+                      </button>
+                    </div>
                   </div>
                 </div>
 
+                <div className="h-px bg-[#F0EEE9] mb-6"></div>
+
                 <div>
-                  <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Aroma</span>
+                  <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Notas y aromas</span>
                   <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
                     {todosLosAromas.map((aroma) => (
                       <button
@@ -843,13 +898,16 @@ export function Landing() {
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
 
-            {hayFiltrosActivos && (
-              <button onClick={limpiarFiltros} className="mt-4 text-sm text-[#C9A96E] underline hover:text-[#1A1A1A] transition-colors">
-                Limpiar todos los filtros
-              </button>
+                {hayFiltrosActivos && (
+                  <div className="mt-6 pt-5 border-t border-[#F0EEE9] flex items-center justify-between flex-wrap gap-3">
+                    <span className="text-xs text-[#A0A0A0]">{filteredProducts.length} resultado{filteredProducts.length === 1 ? "" : "s"}</span>
+                    <button onClick={limpiarFiltros} className="text-sm text-[#C9A96E] underline hover:text-[#1A1A1A] transition-colors">
+                      Limpiar todos los filtros
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </FadeIn>
