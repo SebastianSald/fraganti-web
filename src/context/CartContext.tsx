@@ -1,10 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { FORMATO_LABELS, type Perfume, type FormatoKey } from "../data/perfumes";
+import { type Perfume, type Variante } from "../data/perfumes";
 import { buscarCuponPorCodigo, calcularDescuento, type Cupon } from "../data/cupones";
 
 export interface CartItem {
   perfumeId: number;
-  formato: FormatoKey;
+  /** Id de la variante comprada: "completo:<id>" (un tamaño de frasco) o "decant5"/"decant10". */
+  formato: string;
+  /** Texto legible de la variante en el momento de agregarla, ej. "100ml" o "Decant 5ml". */
+  label: string;
   nombre: string;
   imagen: string;
   precioTexto: string;
@@ -22,9 +25,9 @@ interface CartContextValue {
   total: number;
   cuponError: string | null;
   cuponCargando: boolean;
-  addToCart: (perfume: Perfume, formato: FormatoKey) => void;
-  removeFromCart: (perfumeId: number, formato: FormatoKey) => void;
-  setCantidad: (perfumeId: number, formato: FormatoKey, cantidad: number) => void;
+  addToCart: (perfume: Perfume, variante: Variante) => void;
+  removeFromCart: (perfumeId: number, formato: string) => void;
+  setCantidad: (perfumeId: number, formato: string, cantidad: number) => void;
   clearCart: () => void;
   aplicarCupon: (codigo: string) => Promise<void>;
   quitarCupon: () => void;
@@ -32,7 +35,10 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const STORAGE_KEY = "fraganti_cart_v1";
+// v2: el carrito ahora guarda variantes genéricas (tamaños de frasco + decants)
+// en vez de un FormatoKey fijo de 3 valores. Se cambia la llave para no
+// intentar leer carritos viejos con una forma incompatible.
+const STORAGE_KEY = "fraganti_cart_v2";
 
 /** Convierte "$195.000" → 195000. Robusto ante formatos con o sin "$"/puntos. */
 export function parsePrecioCOP(texto: string): number {
@@ -70,9 +76,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [items]);
 
-  const addToCart = (perfume: Perfume, formato: FormatoKey) => {
-    const info = perfume.formatos[formato];
+  const addToCart = (perfume: Perfume, variante: Variante) => {
+    const info = variante.info;
     if (!info?.disponible || info.stock <= 0) return;
+    const formato = variante.id;
 
     setItems((prev) => {
       const existente = prev.find((i) => i.perfumeId === perfume.id && i.formato === formato);
@@ -85,6 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const nuevo: CartItem = {
         perfumeId: perfume.id,
         formato,
+        label: variante.label,
         nombre: perfume.name,
         imagen: perfume.image,
         precioTexto: info.precio,
@@ -96,11 +104,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const removeFromCart = (perfumeId: number, formato: FormatoKey) => {
+  const removeFromCart = (perfumeId: number, formato: string) => {
     setItems((prev) => prev.filter((i) => !(i.perfumeId === perfumeId && i.formato === formato)));
   };
 
-  const setCantidad = (perfumeId: number, formato: FormatoKey, cantidad: number) => {
+  const setCantidad = (perfumeId: number, formato: string, cantidad: number) => {
     setItems((prev) =>
       prev
         .map((i) => {
@@ -165,5 +173,3 @@ export function useCart(): CartContextValue {
   if (!ctx) throw new Error("useCart debe usarse dentro de <CartProvider>");
   return ctx;
 }
-
-export { FORMATO_LABELS };

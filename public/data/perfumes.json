@@ -24,9 +24,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$195.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "fcrlij4",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$195.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -39,7 +46,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 2,
@@ -69,9 +77,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$280.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "5sas8zc",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$280.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -84,7 +99,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 3,
@@ -116,9 +132,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$300.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "j23i5ic",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$300.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -131,7 +154,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 4,
@@ -161,9 +185,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$235.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "5e4d156",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$235.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -176,7 +207,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 5,
@@ -209,9 +241,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$380.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "s1yle8v",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$380.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -224,7 +263,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 6,
@@ -253,9 +293,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$290.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "z45yi9c",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$290.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -268,7 +315,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 7,
@@ -297,9 +345,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$240.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "p2jwzga",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$240.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -312,7 +367,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 8,
@@ -340,9 +396,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$230.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "3vy4pyh",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$230.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -355,7 +418,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 9,
@@ -372,9 +436,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$250.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "yo6em0i",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$250.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -387,7 +458,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 10,
@@ -420,9 +492,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$240.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "u3iadgt",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$240.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -435,7 +514,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 11,
@@ -468,9 +548,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$240.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "joqqocq",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$240.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -483,7 +570,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 12,
@@ -509,9 +597,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$335.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "jtt318d",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$335.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -524,7 +619,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 13,
@@ -555,9 +651,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$230.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "f2hs3tq",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$230.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -570,7 +673,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 14,
@@ -598,9 +702,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$220.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "sc7nqvt",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$220.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -613,7 +724,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 15,
@@ -645,9 +757,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$220.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "a1wkexk",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$220.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -660,7 +779,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 16,
@@ -698,9 +818,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$280.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "tlsyknh",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$280.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -713,7 +840,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 17,
@@ -744,9 +872,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$235.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "2ypyztv",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$235.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -759,7 +894,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 18,
@@ -788,9 +924,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$340.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "dgsdros",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$340.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -803,7 +946,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 19,
@@ -832,9 +976,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$220.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "krwc25z",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$220.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -847,7 +998,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 20,
@@ -880,9 +1032,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$245.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "bl3dpnv",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$245.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -895,7 +1054,8 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   },
   {
     "id": 21,
@@ -929,9 +1089,16 @@
     },
     "formatos": {
       "completo": {
-        "disponible": true,
-        "precio": "$390.000",
-        "stock": 5
+        "tamanos": [
+          {
+            "id": "drmxy6y",
+            "ml": 0,
+            "disponible": true,
+            "precio": "$390.000",
+            "precioAntes": "",
+            "stock": 5
+          }
+        ]
       },
       "decant5": {
         "disponible": false,
@@ -944,6 +1111,7 @@
         "stock": 0
       }
     },
-    "genero": "Unisex"
+    "genero": "Unisex",
+    "imagenAbierta": ""
   }
 ]

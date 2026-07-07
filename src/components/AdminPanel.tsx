@@ -3,9 +3,10 @@ import type { Session } from "@supabase/supabase-js";
 import { Search, Plus, Trash2, LogOut, Check, X as XIcon, ChevronDown, Star } from "lucide-react";
 import { supabase, supabaseConfigured } from "../lib/supabaseClient";
 import {
-  loadPerfumes, actualizarPerfume, crearPerfume, eliminarPerfume, nuevoPerfumeVacio,
-  FAMILIAS_CATALOGO, GENEROS_CATALOGO, FORMATO_LABELS, FORMATO_ORDEN,
-  type Perfume, type FormatoKey,
+  loadPerfumes, actualizarPerfume, crearPerfume, eliminarPerfume, nuevoPerfumeVacio, nuevoTamanoVacio,
+  variantesOfrecidas, perfumeAgotado, perfumeEnOferta, labelTamano, resolverImagen,
+  FAMILIAS_CATALOGO, GENEROS_CATALOGO, FORMATO_LABELS, DECANT_KEYS,
+  type Perfume, type FormatoDecantKey, type TamanoCompleto,
 } from "../data/perfumes";
 
 import { loadCupones, crearCupon, actualizarCupon, eliminarCupon, type Cupon, type TipoCupon } from "../data/cupones";
@@ -129,7 +130,7 @@ function ChipList({
 function FormatRow({
   formatKey, info, onChange,
 }: {
-  formatKey: FormatoKey;
+  formatKey: FormatoDecantKey;
   info: { disponible: boolean; precio: string; precioAntes?: string; stock: number };
   onChange: (next: { disponible: boolean; precio: string; precioAntes?: string; stock: number }) => void;
 }) {
@@ -196,6 +197,96 @@ function FormatRow({
   );
 }
 
+/** Fila para editar UN tamaño de frasco completo (ej. 100ml) — se puede agregar o quitar tamaños. */
+function TamanoRow({
+  tamano, onChange, onEliminar,
+}: {
+  tamano: TamanoCompleto;
+  onChange: (next: TamanoCompleto) => void;
+  onEliminar: () => void;
+}) {
+  const antes = parseInt((tamano.precioAntes || "").replace(/[^\d]/g, ""), 10) || 0;
+  const ahora = parseInt((tamano.precio || "").replace(/[^\d]/g, ""), 10) || 0;
+  const enOferta = antes > 0 && ahora > 0 && antes > ahora;
+  const porcentaje = enOferta ? Math.round(((antes - ahora) / antes) * 100) : 0;
+
+  return (
+    <div className={`p-3 rounded border border-[#E5E0D5] mb-2 ${!tamano.disponible ? "opacity-60" : ""}`} style={{ background: "#FDFBF7" }}>
+      <div className="grid grid-cols-[0.7fr_1.4fr_1fr_0.7fr_auto] gap-3 items-center">
+        <div>
+          <span className="block text-[10px] text-[#A0A0A0]">Tamaño (ml)</span>
+          <input
+            type="number"
+            min={0}
+            value={tamano.ml}
+            onChange={(e) => onChange({ ...tamano, ml: Number(e.target.value || 0) })}
+            placeholder="100"
+            className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white"
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm font-medium mt-4">
+          <input
+            type="checkbox"
+            checked={tamano.disponible}
+            onChange={(e) => onChange({ ...tamano, disponible: e.target.checked })}
+          />
+          Se vende
+        </label>
+        <div>
+          <span className="block text-[10px] text-[#A0A0A0]">Precio actual</span>
+          <input
+            type="text"
+            disabled={!tamano.disponible}
+            value={tamano.precio}
+            onChange={(e) => onChange({ ...tamano, precio: e.target.value })}
+            placeholder="Ej. $195.000"
+            className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white disabled:bg-[#F0EEE9] disabled:text-[#B0B0B0]"
+          />
+        </div>
+        <div>
+          <span className="block text-[10px] text-[#A0A0A0]">Stock</span>
+          <input
+            type="number"
+            min={0}
+            disabled={!tamano.disponible}
+            value={tamano.stock}
+            onChange={(e) => onChange({ ...tamano, stock: Number(e.target.value || 0) })}
+            className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white disabled:bg-[#F0EEE9] disabled:text-[#B0B0B0]"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={onEliminar}
+          aria-label="Eliminar este tamaño"
+          className="text-[#C9C4B8] hover:text-red-600 transition-colors mt-4"
+        >
+          <Trash2 size={15} />
+        </button>
+      </div>
+
+      {tamano.disponible && (
+        <div className="mt-2 pt-2 border-t border-[#E5E0D5] flex items-center gap-2">
+          <div className="flex-1">
+            <span className="block text-[10px] text-[#A0A0A0]">Precio antes (déjalo vacío si no hay oferta)</span>
+            <input
+              type="text"
+              value={tamano.precioAntes || ""}
+              onChange={(e) => onChange({ ...tamano, precioAntes: e.target.value })}
+              placeholder="Ej. $250.000"
+              className="w-full px-2 py-1.5 border border-[#E0E0E0] rounded text-xs bg-white"
+            />
+          </div>
+          {enOferta && (
+            <span className="text-[10px] bg-red-600 text-white font-bold px-2 py-1 rounded-full whitespace-nowrap mt-3">
+              OFERTA -{porcentaje}%
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PerfumeCard({
   perfume, isOpen, onToggle, onSaved, onDeleted,
 }: {
@@ -213,15 +304,8 @@ function PerfumeCard({
   useEffect(() => { setDraft(perfume); }, [perfume]);
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(perfume);
-  const agotado = FORMATO_ORDEN.filter(k => draft.formatos[k].disponible)
-    .every(k => draft.formatos[k].stock <= 0) || FORMATO_ORDEN.every(k => !draft.formatos[k].disponible);
-  const enOferta = FORMATO_ORDEN.some(k => {
-    const f = draft.formatos[k];
-    if (!f.disponible || !f.precioAntes) return false;
-    const antes = parseInt(f.precioAntes.replace(/[^\d]/g, ""), 10) || 0;
-    const ahora = parseInt(f.precio.replace(/[^\d]/g, ""), 10) || 0;
-    return antes > ahora && ahora > 0;
-  });
+  const agotado = perfumeAgotado(draft);
+  const enOferta = perfumeEnOferta(draft);
 
   const guardar = async () => {
     setSaving(true);
@@ -256,7 +340,7 @@ function PerfumeCard({
         className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-[#FDFBF7] transition-colors"
       >
         <img
-          src={`/images/${draft.image}`}
+          src={resolverImagen(draft.image)}
           onError={(e) => { (e.target as HTMLImageElement).style.visibility = "hidden"; }}
           className="w-11 h-11 rounded object-cover bg-[#F5F5DC] flex-shrink-0"
         />
@@ -309,18 +393,81 @@ function PerfumeCard({
             Mostrar etiqueta "NUEVO"
           </label>
 
-          <div className="mb-4">
-            <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">
-              Nombre del archivo de foto (debe existir en public/images/ en GitHub)
-            </label>
-            <input className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm" value={draft.image}
-              onChange={(e) => setDraft({ ...draft, image: e.target.value })} placeholder="nombre-archivo.jpg" />
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">
+                Foto principal (nombre de archivo en public/images/, o un link de Cloudinary/URL)
+              </label>
+              <input className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm" value={draft.image}
+                onChange={(e) => setDraft({ ...draft, image: e.target.value })} placeholder="nombre-archivo.jpg o https://..." />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">
+                Foto de la botella/decant ABIERTO (opcional)
+              </label>
+              <input className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm" value={draft.imagenAbierta || ""}
+                onChange={(e) => setDraft({ ...draft, imagenAbierta: e.target.value })} placeholder="Link de Cloudinary o nombre de archivo" />
+              <p className="text-[10px] text-[#A0A0A0] mt-1">Se muestra en la tienda cuando el cliente elige un Decant (5ml o 10ml). Si la dejas vacía, se sigue mostrando la foto principal.</p>
+            </div>
+          </div>
+          {(draft.image || draft.imagenAbierta) && (
+            <div className="flex gap-3 mb-4">
+              {draft.image && (
+                <div>
+                  <img src={resolverImagen(draft.image)} className="w-16 h-16 rounded object-cover bg-[#F5F5DC] border border-[#E5E0D5]" />
+                  <span className="block text-[9px] text-[#A0A0A0] text-center mt-1">Cerrada</span>
+                </div>
+              )}
+              {draft.imagenAbierta && (
+                <div>
+                  <img src={resolverImagen(draft.imagenAbierta)} className="w-16 h-16 rounded object-cover bg-[#F5F5DC] border border-[#E5E0D5]" />
+                  <span className="block text-[9px] text-[#A0A0A0] text-center mt-1">Abierta</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mb-5 pt-4 border-t border-dashed border-[#E5E0D5]">
+            <h4 className="font-serif text-lg mb-1">Frasco completo — tamaños</h4>
+            <p className="text-xs text-[#A0A0A0] mb-3">
+              Agrega uno o varios tamaños (ej. 100ml, 200ml). Baja el stock a 0 cuando se agote — la tienda lo muestra "Agotado" sola.
+            </p>
+            {draft.formatos.completo.tamanos.map((t) => (
+              <TamanoRow
+                key={t.id}
+                tamano={t}
+                onChange={(next) => setDraft({
+                  ...draft,
+                  formatos: {
+                    ...draft.formatos,
+                    completo: { tamanos: draft.formatos.completo.tamanos.map((x) => (x.id === t.id ? next : x)) },
+                  },
+                })}
+                onEliminar={() => setDraft({
+                  ...draft,
+                  formatos: {
+                    ...draft.formatos,
+                    completo: { tamanos: draft.formatos.completo.tamanos.filter((x) => x.id !== t.id) },
+                  },
+                })}
+              />
+            ))}
+            <button
+              type="button"
+              onClick={() => setDraft({
+                ...draft,
+                formatos: { ...draft.formatos, completo: { tamanos: [...draft.formatos.completo.tamanos, nuevoTamanoVacio()] } },
+              })}
+              className="flex items-center gap-1.5 text-xs text-[#B89250] border border-[#C9A96E] rounded px-3 py-2 hover:bg-[#C9A96E] hover:text-white transition-colors"
+            >
+              <Plus size={13} /> Agregar tamaño
+            </button>
           </div>
 
           <div className="mb-5 pt-4 border-t border-dashed border-[#E5E0D5]">
-            <h4 className="font-serif text-lg mb-1">Disponibilidad, precio y stock</h4>
-            <p className="text-xs text-[#A0A0A0] mb-3">Marca solo los formatos que sí vendes. Baja el stock a 0 cuando se agote — la tienda lo muestra "Agotado" sola.</p>
-            {FORMATO_ORDEN.map((key) => (
+            <h4 className="font-serif text-lg mb-1">Decants</h4>
+            <p className="text-xs text-[#A0A0A0] mb-3">Marca solo los que sí vendes. Baja el stock a 0 cuando se agote — la tienda lo muestra "Agotado" sola.</p>
+            {DECANT_KEYS.map((key) => (
               <FormatRow
                 key={key}
                 formatKey={key}

@@ -13,8 +13,8 @@ export interface FragranceNotes {
   fondo: string[];
 }
 
-/** Las tres formas en que se puede vender un perfume. */
-export type FormatoKey = "completo" | "decant5" | "decant10";
+/** Los decants tienen tamaño fijo. El frasco completo puede tener varios tamaños (ver TamanoCompleto). */
+export type FormatoDecantKey = "decant5" | "decant10";
 
 export interface FormatoInfo {
   /** Si el negocio ofrece este perfume en este formato (aunque esté agotado). */
@@ -31,6 +31,17 @@ export interface FormatoInfo {
   stock: number;
 }
 
+/**
+ * Un tamaño de frasco completo (ej. 100ml, 200ml). Un perfume puede tener
+ * varios — cada uno con su propio precio y stock — o solo uno.
+ */
+export interface TamanoCompleto extends FormatoInfo {
+  /** Identificador estable (no cambia aunque se edite el precio o el ml). */
+  id: string;
+  /** Mililitros del frasco, ej. 100. 0 = "tamaño único" (no se muestra el ml). */
+  ml: number;
+}
+
 /** Para quién está pensado el perfume — se usa como filtro en la tienda. */
 export type Genero = "Masculino" | "Femenino" | "Unisex";
 
@@ -43,41 +54,59 @@ export interface Perfume {
   family: string;
   genero: Genero;
   image: string;
+  /**
+   * Foto opcional de la botella/decant ABIERTO. Si existe, se muestra en vez
+   * de `image` cuando el cliente selecciona un decant (5ml o 10ml).
+   */
+  imagenAbierta?: string;
   isNew?: boolean;
   notasCorta: string;
   notas: FragranceNotes;
   formatos: {
-    completo: FormatoInfo;
+    completo: { tamanos: TamanoCompleto[] };
     decant5: FormatoInfo;
     decant10: FormatoInfo;
   };
 }
 
-export const FORMATO_ORDEN: FormatoKey[] = ["completo", "decant5", "decant10"];
+export const DECANT_KEYS: FormatoDecantKey[] = ["decant5", "decant10"];
 
-export const FORMATO_LABELS: Record<FormatoKey, string> = {
-  completo: "Frasco completo",
+export const FORMATO_LABELS: Record<FormatoDecantKey, string> = {
   decant5: "Decant 5ml",
   decant10: "Decant 10ml",
 };
 
 const FORMATOS_VACIOS = {
-  completo: { disponible: true, precio: "", precioAntes: "", stock: 0 },
+  completo: { tamanos: [] as TamanoCompleto[] },
   decant5: { disponible: false, precio: "", precioAntes: "", stock: 0 },
   decant10: { disponible: false, precio: "", precioAntes: "", stock: 0 },
 };
 
-/** true si este formato tiene un precio anterior mayor al actual (está en oferta). */
+/** Genera un id corto y estable para un tamaño nuevo. */
+export function generarIdTamano(): string {
+  return Math.random().toString(36).slice(2, 9);
+}
+
+/** Una opción de compra "aplanada" — ya sea un tamaño de frasco completo o un decant. */
+export interface Variante {
+  /** "completo:<id>" para frascos, o "decant5"/"decant10" para decants. */
+  id: string;
+  label: string;
+  info: FormatoInfo;
+  esDecant: boolean;
+}
+
+/** Texto a mostrar para un tamaño de frasco completo, ej. "100ml" o "Frasco completo". */
+export function labelTamano(t: TamanoCompleto): string {
+  return t.ml > 0 ? `${t.ml}ml` : "Frasco completo";
+}
+
+/** true si este formato/tamaño tiene un precio anterior mayor al actual (está en oferta). */
 export function formatoEnOferta(info: FormatoInfo): boolean {
   if (!info.precioAntes) return false;
   const antes = parsePrecioCOPLocal(info.precioAntes);
   const ahora = parsePrecioCOPLocal(info.precio);
   return antes > 0 && ahora > 0 && antes > ahora;
-}
-
-/** true si el perfume tiene AL MENOS un formato ofrecido en oferta. */
-export function perfumeEnOferta(p: Perfume): boolean {
-  return formatosOfrecidos(p).some((k) => formatoEnOferta(p.formatos[k]));
 }
 
 /** Porcentaje de descuento redondeado, ej. 25 para "-25%". Null si no aplica. */
@@ -96,23 +125,47 @@ function parsePrecioCOPLocal(texto: string): number {
   return soloDigitos ? parseInt(soloDigitos, 10) : 0;
 }
 
-/** Formatos que el negocio ofrece para este perfume (disponible=true), en orden fijo. */
-export function formatosOfrecidos(p: Perfume): FormatoKey[] {
-  return FORMATO_ORDEN.filter((k) => p.formatos?.[k]?.disponible);
+/**
+ * Todas las variantes (tamaños de frasco completo + decants) que el negocio
+ * ofrece para este perfume (disponible=true), en orden fijo: primero los
+ * tamaños de frasco completo (en el orden en que están guardados), luego
+ * decant 5ml y decant 10ml.
+ */
+export function variantesOfrecidas(p: Perfume): Variante[] {
+  const variantes: Variante[] = [];
+  const tamanos = p.formatos?.completo?.tamanos || [];
+  for (const t of tamanos) {
+    if (t.disponible) variantes.push({ id: `completo:${t.id}`, label: labelTamano(t), info: t, esDecant: false });
+  }
+  for (const k of DECANT_KEYS) {
+    const info = p.formatos?.[k];
+    if (info?.disponible) variantes.push({ id: k, label: FORMATO_LABELS[k], info, esDecant: true });
+  }
+  return variantes;
 }
 
-/** true si el perfume no tiene NINGÚN formato ofrecido con stock > 0. */
+/** Busca una variante ofrecida por su id (ej. "completo:abc123" o "decant5"). */
+export function obtenerVariante(p: Perfume, varianteId: string): Variante | null {
+  return variantesOfrecidas(p).find((v) => v.id === varianteId) ?? null;
+}
+
+/** true si el perfume tiene AL MENOS una variante ofrecida en oferta. */
+export function perfumeEnOferta(p: Perfume): boolean {
+  return variantesOfrecidas(p).some((v) => formatoEnOferta(v.info));
+}
+
+/** true si el perfume no tiene NINGUNA variante ofrecida con stock > 0. */
 export function perfumeAgotado(p: Perfume): boolean {
-  const ofrecidos = formatosOfrecidos(p);
-  if (ofrecidos.length === 0) return true;
-  return ofrecidos.every((k) => p.formatos[k].stock <= 0);
+  const variantes = variantesOfrecidas(p);
+  if (variantes.length === 0) return true;
+  return variantes.every((v) => v.info.stock <= 0);
 }
 
-/** El primer formato ofrecido con stock disponible (para preseleccionar en la UI). */
-export function primerFormatoDisponible(p: Perfume): FormatoKey | null {
-  const ofrecidos = formatosOfrecidos(p);
-  const conStock = ofrecidos.find((k) => p.formatos[k].stock > 0);
-  return conStock ?? ofrecidos[0] ?? null;
+/** La primera variante ofrecida con stock disponible (para preseleccionar en la UI). */
+export function primeraVarianteDisponible(p: Perfume): Variante | null {
+  const variantes = variantesOfrecidas(p);
+  const conStock = variantes.find((v) => v.info.stock > 0);
+  return conStock ?? variantes[0] ?? null;
 }
 
 // ----------------------------------------------------------------------------
@@ -120,6 +173,44 @@ export function primerFormatoDisponible(p: Perfume): FormatoKey | null {
 // front (camelCase). Todo el resto de la app sigue usando `Perfume` igual
 // que antes — solo este archivo sabe que la fuente de datos es Supabase.
 // ----------------------------------------------------------------------------
+
+/**
+ * Convierte cualquier forma antigua o nueva de `formatos.completo` al
+ * esquema actual `{ tamanos: TamanoCompleto[] }`. Esto permite que perfumes
+ * guardados ANTES de agregar el soporte multi-tamaño (una sola forma con
+ * disponible/precio/stock) sigan funcionando sin tener que migrar la base
+ * de datos a mano — se normalizan solos la próxima vez que se leen, y quedan
+ * en el formato nuevo apenas se guarden desde el admin.
+ */
+function normalizarCompleto(raw: any): { tamanos: TamanoCompleto[] } {
+  if (!raw) return { tamanos: [] };
+  if (Array.isArray(raw.tamanos)) {
+    return { tamanos: raw.tamanos.map((t: any) => ({ ...t, id: t.id || generarIdTamano() })) };
+  }
+  // Forma antigua: { disponible, precio, precioAntes, stock } sin tamaños.
+  if ("disponible" in raw || "precio" in raw) {
+    return {
+      tamanos: [
+        {
+          id: generarIdTamano(),
+          ml: 0,
+          disponible: !!raw.disponible,
+          precio: raw.precio || "",
+          precioAntes: raw.precioAntes || "",
+          stock: Number(raw.stock) || 0,
+        },
+      ],
+    };
+  }
+  return { tamanos: [] };
+}
+
+/** Resuelve la ruta a mostrar de una imagen: URL completa (Cloudinary, etc.) tal cual, o archivo local en /images/. */
+export function resolverImagen(ruta?: string | null): string {
+  if (!ruta) return "";
+  if (/^https?:\/\//i.test(ruta)) return ruta;
+  return `/images/${ruta}`;
+}
 
 function filaASupaPerfume(row: any): Perfume {
   return {
@@ -129,10 +220,15 @@ function filaASupaPerfume(row: any): Perfume {
     family: row.family,
     genero: row.genero || "Unisex",
     image: row.image,
+    imagenAbierta: row.imagen_abierta || "",
     isNew: !!row.is_new,
     notasCorta: row.notas_corta || "",
     notas: row.notas || { salida: [], corazon: [], fondo: [] },
-    formatos: row.formatos || FORMATOS_VACIOS,
+    formatos: {
+      completo: normalizarCompleto(row.formatos?.completo),
+      decant5: row.formatos?.decant5 || FORMATOS_VACIOS.decant5,
+      decant10: row.formatos?.decant10 || FORMATOS_VACIOS.decant10,
+    },
   };
 }
 
@@ -143,6 +239,7 @@ function perfumeAFila(p: Partial<Perfume>) {
   if (p.family !== undefined) fila.family = p.family;
   if (p.genero !== undefined) fila.genero = p.genero;
   if (p.image !== undefined) fila.image = p.image;
+  if (p.imagenAbierta !== undefined) fila.imagen_abierta = p.imagenAbierta;
   if (p.isNew !== undefined) fila.is_new = p.isNew;
   if (p.notasCorta !== undefined) fila.notas_corta = p.notasCorta;
   if (p.notas !== undefined) fila.notas = p.notas;
@@ -158,7 +255,12 @@ async function cargarDesdeRespaldo(): Promise<Perfume[]> {
   return data.map((item: any) => ({
     ...item,
     genero: item.genero || "Unisex",
-    formatos: item.formatos || FORMATOS_VACIOS,
+    imagenAbierta: item.imagenAbierta || "",
+    formatos: {
+      completo: normalizarCompleto(item.formatos?.completo),
+      decant5: item.formatos?.decant5 || FORMATOS_VACIOS.decant5,
+      decant10: item.formatos?.decant10 || FORMATOS_VACIOS.decant10,
+    },
   }));
 }
 
@@ -210,11 +312,17 @@ export function nuevoPerfumeVacio(): Omit<Perfume, "id"> {
     family: "Floral",
     genero: "Unisex",
     image: "",
+    imagenAbierta: "",
     isNew: false,
     notasCorta: "",
     notas: { salida: [], corazon: [], fondo: [] },
     formatos: JSON.parse(JSON.stringify(FORMATOS_VACIOS)),
   };
+}
+
+/** Un tamaño de frasco completo nuevo y vacío, listo para editar en el admin. */
+export function nuevoTamanoVacio(): TamanoCompleto {
+  return { id: generarIdTamano(), ml: 100, disponible: true, precio: "", precioAntes: "", stock: 0 };
 }
 
 export interface OlfactoryFamily {

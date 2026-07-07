@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import {
-  formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
-  type Perfume, type FormatoKey,
+  variantesOfrecidas, perfumeAgotado, primeraVarianteDisponible, resolverImagen,
+  type Perfume, type Variante,
 } from "../data/perfumes";
 import { useCart } from "../context/CartContext";
 
@@ -32,22 +32,24 @@ function NoteRow({ label, values }: { label: string; values: string[] }) {
 }
 
 export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
-  const [selected, setSelected] = useState<FormatoKey | null>(null);
+  const [selected, setSelected] = useState<Variante | null>(null);
   const { addToCart } = useCart();
   const [agregado, setAgregado] = useState(false);
 
-  // Cada vez que se abre un producto distinto, preselecciona su primer formato con stock.
+  // Cada vez que se abre un producto distinto, preselecciona su primera variante con stock.
   useEffect(() => {
-    if (product) setSelected(primerFormatoDisponible(product));
+    if (product) setSelected(primeraVarianteDisponible(product));
     setAgregado(false);
   }, [product?.id]);
 
   if (!product) return null;
 
-  const ofrecidos = formatosOfrecidos(product);
+  const ofrecidos = variantesOfrecidas(product);
   const agotado = perfumeAgotado(product);
-  const selectedInfo = selected ? product.formatos[selected] : null;
+  const selectedInfo = selected?.info ?? null;
   const selectedSinStock = !selectedInfo || selectedInfo.stock <= 0;
+  const mostrarAbierta = !!selected?.esDecant && !!product.imagenAbierta;
+  const imagenActual = mostrarAbierta ? product.imagenAbierta! : product.image;
 
   const handleAgregar = () => {
     if (!selected || agotado || selectedSinStock) return;
@@ -92,9 +94,9 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
               </span>
             )}
             <img
-              src={`/images/${product.image}`}
+              src={resolverImagen(imagenActual)}
               alt={product.name}
-              className="w-full h-full object-cover mix-blend-multiply rounded-md"
+              className="w-full h-full object-cover mix-blend-multiply rounded-md transition-opacity duration-300"
             />
           </div>
 
@@ -113,16 +115,15 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             {/* Selector de formato */}
             {ofrecidos.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
-                {ofrecidos.map((key) => {
-                  const info = product.formatos[key];
-                  const sinStock = info.stock <= 0;
-                  const isSelected = selected === key;
+                {ofrecidos.map((variante) => {
+                  const sinStock = variante.info.stock <= 0;
+                  const isSelected = selected?.id === variante.id;
                   return (
                     <button
-                      key={key}
+                      key={variante.id}
                       type="button"
                       disabled={sinStock}
-                      onClick={() => setSelected(key)}
+                      onClick={() => setSelected(variante)}
                       className={`px-3 py-1.5 rounded-full text-xs border transition-all ${
                         sinStock
                           ? "border-[#E0E0E0] text-[#B0B0B0] bg-[#F5F5F5] cursor-not-allowed line-through"
@@ -131,7 +132,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                           : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
                       }`}
                     >
-                      {FORMATO_LABELS[key]}{sinStock ? " · Agotado" : ""}
+                      {variante.label}{sinStock ? " · Agotado" : ""}
                     </button>
                   );
                 })}

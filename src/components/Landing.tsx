@@ -6,9 +6,9 @@ import {
 } from "lucide-react";
 import {
   loadPerfumes, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS, calcularMatchDelQuiz,
-  formatosOfrecidos, perfumeAgotado, primerFormatoDisponible, FORMATO_LABELS,
+  variantesOfrecidas, perfumeAgotado, primeraVarianteDisponible, resolverImagen,
   formatoEnOferta, perfumeEnOferta, porcentajeDescuento,
-  type Perfume, type FormatoKey, type Genero, type QuizOption,
+  type Perfume, type Variante, type Genero, type QuizOption,
 } from "../data/perfumes";
 import { useCart, parsePrecioCOP, formatearCOP } from "../context/CartContext";
 import { loadResenas, resumenResenas, type Resena } from "../data/resenas";
@@ -23,12 +23,12 @@ function normalizarTexto(texto: string): string {
     .toLowerCase();
 }
 
-/** Precio de referencia para ordenar por precio: el del primer formato que el perfume ofrezca. */
+/** Precio de referencia para ordenar por precio: el más bajo entre todas las variantes que el perfume ofrezca. */
 function precioReferencia(p: Perfume): number {
-  const key = primerFormatoDisponible(p) ?? (["completo", "decant5", "decant10"] as const).find((k) => p.formatos[k]?.disponible);
-  if (!key) return Number.POSITIVE_INFINITY;
-  const precio = parsePrecioCOP(p.formatos[key].precio);
-  return precio > 0 ? precio : Number.POSITIVE_INFINITY;
+  const variantes = variantesOfrecidas(p);
+  if (variantes.length === 0) return Number.POSITIVE_INFINITY;
+  const precios = variantes.map((v) => parsePrecioCOP(v.info.precio)).filter((n) => n > 0);
+  return precios.length > 0 ? Math.min(...precios) : Number.POSITIVE_INFINITY;
 }
 
 type OrdenCatalogo = "relevancia" | "nombre-asc" | "nombre-desc" | "precio-asc" | "precio-desc";
@@ -121,28 +121,48 @@ function FadeIn({ children, delay = 0, className = "", direction = "up" }: { chi
   );
 }
 
-// Tarjeta de producto individual — maneja su propio formato seleccionado
-// (Completo / Decant 5ml / Decant 10ml) y refleja el stock de cada uno.
+// Tarjeta de producto individual — maneja su propia variante seleccionada
+// (un tamaño de frasco completo, o un decant) y refleja el stock de cada una.
 function ProductCard({
   product,
   delay,
   onQuickView,
+  soloDecants,
 }: {
   product: Perfume;
   delay: number;
   onQuickView: () => void;
+  /** Si está activo, esta tarjeta solo muestra y permite elegir decants — sin precios ni opción de frasco completo. */
+  soloDecants: boolean;
 }) {
-  const ofrecidos = formatosOfrecidos(product);
+  const todasVariantes = variantesOfrecidas(product);
+  const variantesVisibles = soloDecants ? todasVariantes.filter((v) => v.esDecant) : todasVariantes;
   const agotado = perfumeAgotado(product);
   const enOferta = perfumeEnOferta(product);
-  const [selected, setSelected] = useState<FormatoKey | null>(() => primerFormatoDisponible(product));
   const { addToCart } = useCart();
   const [agregado, setAgregado] = useState(false);
+  const [selected, setSelected] = useState<Variante | null>(
+    () => variantesVisibles.find((v) => v.info.stock > 0) ?? variantesVisibles[0] ?? null
+  );
 
-  const selectedInfo = selected ? product.formatos[selected] : null;
+  // Si cambia el modo "Solo Decants" (o el producto), y la variante elegida
+  // ya no está entre las visibles, se reelige automáticamente una válida.
+  useEffect(() => {
+    setSelected((actual) => {
+      if (actual && variantesVisibles.some((v) => v.id === actual.id)) return actual;
+      return variantesVisibles.find((v) => v.info.stock > 0) ?? variantesVisibles[0] ?? null;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soloDecants, product.id]);
+
+  const selectedInfo = selected?.info ?? null;
   const selectedSinStock = !selectedInfo || selectedInfo.stock <= 0;
   const selectedEnOferta = selectedInfo ? formatoEnOferta(selectedInfo) : false;
   const selectedDescuento = selectedInfo ? porcentajeDescuento(selectedInfo) : null;
+
+  // Si el cliente elige un decant y hay foto de botella abierta cargada, se muestra esa foto.
+  const mostrarAbierta = !!selected?.esDecant && !!product.imagenAbierta;
+  const imagenActual = mostrarAbierta ? product.imagenAbierta! : product.image;
 
   const handleAgregar = () => {
     if (!selected || agotado || selectedSinStock) return;
@@ -176,9 +196,9 @@ function ProductCard({
 
         <div className="product-image-container relative h-72 mb-8 bg-[#F5F5DC]/30 rounded-md overflow-hidden flex items-center justify-center">
           <img
-            src={`/images/${product.image}`}
+            src={resolverImagen(imagenActual)}
             alt={product.name}
-            className="w-full h-full object-cover mix-blend-multiply"
+            className="w-full h-full object-cover mix-blend-multiply transition-opacity duration-300"
           />
 
           {/* Quick add overlay on hover */}
@@ -197,19 +217,18 @@ function ProductCard({
           <h3 className="font-serif text-2xl text-[#1A1A1A] mb-1">{product.name}</h3>
           <p className="text-[#5A5A5A] text-sm italic mb-4 flex-grow font-serif">{product.notasCorta}</p>
 
-          {/* Selector de formato: solo se muestran los que el negocio ofrece */}
-          {ofrecidos.length > 0 && (
+          {/* Selector de variante: solo se muestran las que el negocio ofrece (y, en modo Solo Decants, solo decants) */}
+          {variantesVisibles.length > 0 && (
             <div className="flex flex-wrap justify-center gap-2 mb-4">
-              {ofrecidos.map((key) => {
-                const info = product.formatos[key];
-                const sinStock = info.stock <= 0;
-                const isSelected = selected === key;
+              {variantesVisibles.map((variante) => {
+                const sinStock = variante.info.stock <= 0;
+                const isSelected = selected?.id === variante.id;
                 return (
                   <button
-                    key={key}
+                    key={variante.id}
                     type="button"
                     disabled={sinStock}
-                    onClick={() => setSelected(key)}
+                    onClick={() => setSelected(variante)}
                     className={`px-3 py-1.5 rounded-full text-[11px] md:text-xs border transition-all ${
                       sinStock
                         ? "border-[#E0E0E0] text-[#B0B0B0] bg-[#F5F5F5] cursor-not-allowed line-through"
@@ -218,7 +237,7 @@ function ProductCard({
                         : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
                     }`}
                   >
-                    {FORMATO_LABELS[key]}{sinStock ? " · Agotado" : ""}
+                    {variante.label}{sinStock ? " · Agotado" : ""}
                   </button>
                 );
               })}
@@ -842,6 +861,7 @@ export function Landing() {
               product={product}
               delay={index * 150}
               onQuickView={() => setQuickViewId(product.id)}
+              soloDecants={soloDecants}
             />
           ))}
         </div>
@@ -900,7 +920,7 @@ export function Landing() {
                   <div className="relative">
                     <div className="absolute inset-0 bg-[#C9A96E] rounded-full blur-[60px] opacity-20"></div>
                     <img
-                      src={`/images/${quizMatch.image}`}
+                      src={resolverImagen(quizMatch.image)}
                       alt={quizMatch.name}
                       className="w-48 h-48 object-cover rounded-full relative z-10 drop-shadow-2xl border-4 border-white"
                     />
@@ -1002,7 +1022,7 @@ export function Landing() {
                       >
                         <div className="relative aspect-square rounded-xl overflow-hidden bg-[#F5F5DC]/10 mb-3 border border-[#333] group-hover:border-[#C9A96E]/70 transition-all duration-300 group-hover:-translate-y-1 shadow-lg shadow-black/20">
                           <img
-                            src={`/images/${p.image}`}
+                            src={resolverImagen(p.image)}
                             alt={p.name}
                             className="w-full h-full object-cover mix-blend-luminosity opacity-90 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-300"
                           />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Minus, Plus, Trash2, ShoppingBag, Tag } from "lucide-react";
 import { useCart, formatearCOP } from "../context/CartContext";
-import { FORMATO_LABELS } from "../data/perfumes";
+import { resolverImagen } from "../data/perfumes";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -17,7 +17,7 @@ function construirMensajeWhatsApp(
   total: number
 ): string {
   const lineas = items.map(
-    (i) => `• ${i.nombre} (${FORMATO_LABELS[i.formato]}) x${i.cantidad} — ${formatearCOP(i.precioUnitario * i.cantidad)}`
+    (i) => `• ${i.nombre} (${i.label}) x${i.cantidad} — ${formatearCOP(i.precioUnitario * i.cantidad)}`
   );
 
   let mensaje = `Hola FRAGANTI 👋 quiero hacer este pedido:\n\n${lineas.join("\n")}\n\nSubtotal: ${formatearCOP(subtotal)}`;
@@ -85,13 +85,13 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
               {items.map((item) => (
                 <div key={`${item.perfumeId}-${item.formato}`} className="flex gap-3 pb-4 border-b border-[#E5E0D5] last:border-0">
                   <img
-                    src={`/images/${item.imagen}`}
+                    src={resolverImagen(item.imagen)}
                     alt={item.nombre}
                     className="w-16 h-16 object-cover rounded-md bg-[#F5F5DC]/50 flex-shrink-0 mix-blend-multiply"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="font-serif text-base text-[#1A1A1A] truncate">{item.nombre}</p>
-                    <p className="text-xs text-[#A0A0A0] mb-2">{FORMATO_LABELS[item.formato]} · {item.precioTexto} c/u</p>
+                    <p className="text-xs text-[#A0A0A0] mb-2">{item.label} · {item.precioTexto} c/u</p>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 border border-[#E0E0E0] rounded-full px-1">
