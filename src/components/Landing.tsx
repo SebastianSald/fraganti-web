@@ -658,6 +658,27 @@ export function Landing() {
 
           {/* Icons */}
           <div className="flex items-center space-x-4">
+            {/* Redes — solo en escritorio, para no saturar la barra angosta del celular */}
+            <div className="hidden md:flex items-center space-x-3 pr-3 mr-1 border-r border-current/20">
+              <a
+                href={CONTACT.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram de FRAGANTI"
+                className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}
+              >
+                <Instagram size={17} />
+              </a>
+              <a
+                href={CONTACT.tiktokUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok de FRAGANTI"
+                className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}
+              >
+                <TikTokIcon size={16} />
+              </a>
+            </div>
             <button className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}>
               <Search size={20} />
             </button>
@@ -683,6 +704,15 @@ export function Landing() {
             <a href="#decants" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F8F5F2] text-lg font-serif tracking-wide border-b border-[#333] pb-2">Decants</a>
             <a href="#test" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F8F5F2] text-lg font-serif tracking-wide border-b border-[#333] pb-2">Test Olfativo</a>
             <a href="#contacto" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F8F5F2] text-lg font-serif tracking-wide pb-2">Contacto</a>
+            <div className="flex items-center gap-4 pt-1">
+              <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram de FRAGANTI" className="w-9 h-9 rounded-full border border-[#333] flex items-center justify-center text-[#F8F5F2] hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
+                <Instagram size={15} />
+              </a>
+              <a href={CONTACT.tiktokUrl} target="_blank" rel="noopener noreferrer" aria-label="TikTok de FRAGANTI" className="w-9 h-9 rounded-full border border-[#333] flex items-center justify-center text-[#F8F5F2] hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
+                <TikTokIcon size={14} />
+              </a>
+              <span className="text-[#A0A0A0] text-xs">@fraganti.co</span>
+            </div>
           </div>
         </div>
       </nav>
@@ -1114,6 +1144,20 @@ export function Landing() {
               EXPLORAR TODOS LOS DECANTS
             </button>
           </FadeIn>
+
+          <FadeIn delay={480}>
+            <p className="mt-8 text-[#8A8A8A] text-xs tracking-wide">
+              Comparte tu decant y etiquétanos —{" "}
+              <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-[#C9A96E] hover:text-[#F8F5F2] transition-colors inline-flex items-center gap-1 align-middle">
+                <Instagram size={13} />
+              </a>
+              {" / "}
+              <a href={CONTACT.tiktokUrl} target="_blank" rel="noopener noreferrer" className="text-[#C9A96E] hover:text-[#F8F5F2] transition-colors inline-flex items-center gap-1 align-middle">
+                <TikTokIcon size={12} />
+              </a>
+              {" "}@fraganti.co
+            </p>
+          </FadeIn>
         </div>
       </section>
 
@@ -1293,6 +1337,7 @@ export function Landing() {
               <p className="text-[#F8F5F2] font-medium mb-1">Tu esencia, nuestro arte.</p>
               <p className="text-sm mb-6 italic font-serif">Auténtica perfumería de lujo en Colombia.</p>
               
+              <span className="block text-[11px] font-semibold uppercase tracking-widest text-[#5A5A5A] mb-3">Síguenos</span>
               <div className="flex space-x-4">
                 <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full border border-[#333] flex items-center justify-center hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
                   <Instagram size={18} />
