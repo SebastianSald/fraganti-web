@@ -639,11 +639,11 @@ export function Landing() {
           </button>
 
           {/* Logo */}
-          <a href="#" className={`flex items-center gap-2.5 md:gap-3 font-serif text-2xl md:text-3xl font-medium tracking-[0.15em] transition-colors duration-300 ${isScrolled ? "text-[#C9A96E]" : "text-[#C9A96E] md:text-[#F8F5F2]"}`}>
+          <a href="#" className={`flex items-center gap-2 md:gap-3 font-serif text-xl md:text-3xl font-medium tracking-[0.1em] md:tracking-[0.15em] transition-colors duration-300 ${isScrolled ? "text-[#C9A96E]" : "text-[#C9A96E] md:text-[#F8F5F2]"}`}>
             <img
               src="/images/logo-fraganti.png"
               alt="FRAGANTI"
-              className="h-8 md:h-10 w-auto object-contain"
+              className="h-7 md:h-10 w-auto object-contain"
             />
             FRAGANTI
           </a>
@@ -657,9 +657,9 @@ export function Landing() {
           </div>
 
           {/* Icons */}
-          <div className="flex items-center space-x-4">
-            {/* Redes — solo en escritorio, para no saturar la barra angosta del celular */}
-            <div className="hidden md:flex items-center space-x-3 pr-3 mr-1 border-r border-current/20">
+          <div className="flex items-center space-x-2.5 md:space-x-4">
+            {/* Redes — junto al buscador en todas las pantallas, incluido el celular */}
+            <div className="flex items-center space-x-2.5 md:space-x-3 pr-2.5 md:pr-3 mr-0.5 md:mr-1 border-r border-current/20">
               <a
                 href={CONTACT.instagramUrl}
                 target="_blank"
@@ -667,7 +667,7 @@ export function Landing() {
                 aria-label="Instagram de FRAGANTI"
                 className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}
               >
-                <Instagram size={17} />
+                <Instagram size={16} />
               </a>
               <a
                 href={CONTACT.tiktokUrl}
@@ -676,18 +676,18 @@ export function Landing() {
                 aria-label="TikTok de FRAGANTI"
                 className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}
               >
-                <TikTokIcon size={16} />
+                <TikTokIcon size={15} />
               </a>
             </div>
             <button className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}>
-              <Search size={20} />
+              <Search size={19} />
             </button>
             <button
               onClick={() => setIsCartOpen(true)}
               aria-label="Ver carrito"
               className={`hover:text-[#C9A96E] transition-colors relative ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}
             >
-              <ShoppingBag size={20} />
+              <ShoppingBag size={19} />
               {cantidadTotal > 0 && (
                 <span className="absolute -top-1 -right-2 bg-[#C9A96E] text-[#1A1A1A] text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                   {cantidadTotal}
@@ -704,15 +704,6 @@ export function Landing() {
             <a href="#decants" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F8F5F2] text-lg font-serif tracking-wide border-b border-[#333] pb-2">Decants</a>
             <a href="#test" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F8F5F2] text-lg font-serif tracking-wide border-b border-[#333] pb-2">Test Olfativo</a>
             <a href="#contacto" onClick={() => setIsMobileMenuOpen(false)} className="text-[#F8F5F2] text-lg font-serif tracking-wide pb-2">Contacto</a>
-            <div className="flex items-center gap-4 pt-1">
-              <a href={CONTACT.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram de FRAGANTI" className="w-9 h-9 rounded-full border border-[#333] flex items-center justify-center text-[#F8F5F2] hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
-                <Instagram size={15} />
-              </a>
-              <a href={CONTACT.tiktokUrl} target="_blank" rel="noopener noreferrer" aria-label="TikTok de FRAGANTI" className="w-9 h-9 rounded-full border border-[#333] flex items-center justify-center text-[#F8F5F2] hover:bg-[#C9A96E] hover:text-[#1A1A1A] hover:border-[#C9A96E] transition-all">
-                <TikTokIcon size={14} />
-              </a>
-              <span className="text-[#A0A0A0] text-xs">@fraganti.co</span>
-            </div>
           </div>
         </div>
       </nav>
