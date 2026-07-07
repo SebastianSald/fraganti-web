@@ -790,47 +790,46 @@ export function Landing() {
               </div>
             )}
 
-            {/* Familia olfativa — el filtro más usado, siempre a la vista */}
-            <div className="w-full max-w-3xl">
-              <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5 text-center sm:text-left">
-                Familia olfativa
-              </span>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-2.5 mb-4">
-                {FAMILIAS_CATALOGO.map((familia) => (
-                  <button
-                    key={familia}
-                    onClick={() => setFiltroFamilias((prev) => toggleEnLista(prev, familia))}
-                    className={`px-5 py-2 rounded-full text-sm transition-all duration-300 ${
-                      filtroFamilias.includes(familia)
-                      ? "bg-[#1A1A1A] text-[#F8F5F2] border border-[#1A1A1A]"
-                      : "bg-transparent text-[#5A5A5A] border border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
-                    }`}
-                  >
-                    {familia}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Un solo botón de entrada a los demás filtros — género, presentación y notas — para no mezclar todo en una fila */}
+            {/* Un solo botón de entrada a todos los filtros — familia, género, presentación y notas */}
             <button
               onClick={() => setPanelFiltrosAbierto((v) => !v)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm border transition-all duration-300 ${
-                panelFiltrosAbierto || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || soloOfertas
+                panelFiltrosAbierto || filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || soloOfertas
                 ? "bg-[#C9A96E] text-[#1A1A1A] border-[#C9A96E]"
                 : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
               }`}
             >
               <SlidersHorizontal size={14} />
-              Más filtros
-              {(filtroGeneros.length + filtroAromas.length + Number(soloDecants) + Number(soloOfertas)) > 0 &&
-                ` (${filtroGeneros.length + filtroAromas.length + Number(soloDecants) + Number(soloOfertas)})`}
+              Filtros
+              {(filtroFamilias.length + filtroGeneros.length + filtroAromas.length + Number(soloDecants) + Number(soloOfertas)) > 0 &&
+                ` (${filtroFamilias.length + filtroGeneros.length + filtroAromas.length + Number(soloDecants) + Number(soloOfertas)})`}
               <ChevronRight size={14} className={`transition-transform duration-300 ${panelFiltrosAbierto ? "rotate-90" : ""}`} />
             </button>
 
-            {/* Panel de filtros avanzados: género, presentación y notas — agrupados y rotulados, no palabras sueltas */}
+            {/* Panel de filtros: familia, género, presentación y notas — agrupados y rotulados, no palabras sueltas */}
             {panelFiltrosAbierto && (
               <div className="w-full max-w-3xl bg-white border border-[#E5E0D5] rounded-xl p-6 md:p-8 mt-4 text-left">
+                <div className="mb-6">
+                  <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Familia olfativa</span>
+                  <div className="flex flex-wrap gap-2">
+                    {FAMILIAS_CATALOGO.map((familia) => (
+                      <button
+                        key={familia}
+                        onClick={() => setFiltroFamilias((prev) => toggleEnLista(prev, familia))}
+                        className={`px-4 py-1.5 rounded-full text-xs border transition-colors ${
+                          filtroFamilias.includes(familia)
+                          ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
+                          : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                        }`}
+                      >
+                        {familia}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="h-px bg-[#F0EEE9] mb-6"></div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Género</span>
