@@ -398,18 +398,23 @@ export function Landing() {
       lista = lista.filter((p) => normalizarTexto(p.name).includes(termino));
     }
 
+    // Cada filtro es una INTERSECCIÓN: si marcas varios valores en un mismo grupo,
+    // el perfume tiene que cumplirlos TODOS (no basta con cumplir uno solo). Esto
+    // hace que los filtros siempre reduzcan la búsqueda en vez de ampliarla — por
+    // ejemplo, en Notas, marcar "Vainilla" y "Bergamota" solo muestra perfumes que
+    // tengan ambas notas, no perfumes que tengan cualquiera de las dos.
     if (filtroFamilias.length > 0) {
-      lista = lista.filter((p) => filtroFamilias.includes(p.family));
+      lista = lista.filter((p) => filtroFamilias.every((f) => f === p.family));
     }
 
     if (filtroGeneros.length > 0) {
-      lista = lista.filter((p) => filtroGeneros.includes(p.genero));
+      lista = lista.filter((p) => filtroGeneros.every((g) => g === p.genero));
     }
 
     if (filtroAromas.length > 0) {
       lista = lista.filter((p) => {
         const notasPerfume = [...p.notas.salida, ...p.notas.corazon, ...p.notas.fondo];
-        return filtroAromas.some((aroma) => notasPerfume.includes(aroma));
+        return filtroAromas.every((aroma) => notasPerfume.includes(aroma));
       });
     }
 
@@ -809,6 +814,9 @@ export function Landing() {
             {/* Panel de filtros: familia, género, presentación y notas — agrupados y rotulados, no palabras sueltas */}
             {panelFiltrosAbierto && (
               <div className="w-full max-w-3xl bg-white border border-[#E5E0D5] rounded-xl p-6 md:p-8 mt-4 text-left">
+                <p className="text-[11px] text-[#A0A0A0] mb-5 -mt-1">
+                  Los filtros se combinan entre sí: mientras más marques, más se reduce la búsqueda.
+                </p>
                 <div className="mb-6">
                   <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Familia olfativa</span>
                   <div className="flex flex-wrap gap-2">
@@ -1079,7 +1087,7 @@ export function Landing() {
                       >
                         <div className="relative aspect-square rounded-xl overflow-hidden bg-[#F5F5DC]/10 mb-3 border border-[#333] group-hover:border-[#C9A96E]/70 transition-all duration-300 group-hover:-translate-y-1 shadow-lg shadow-black/20">
                           <img
-                            src={resolverImagen(p.image)}
+                            src={resolverImagen(p.imagenAbierta || p.image)}
                             alt={p.name}
                             className="w-full h-full object-cover mix-blend-luminosity opacity-90 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-300"
                           />
