@@ -303,6 +303,7 @@ function ProductCard({
 export function Landing() {
   const [isLoading, setIsLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // Búsqueda, orden y filtros de la colección
   const [searchTerm, setSearchTerm] = useState("");
@@ -377,6 +378,20 @@ export function Landing() {
 
   // Todos los aromas/notas distintos que existen en el catálogo actual,
   // para armar el filtro de "Aroma" dinámicamente (no hay que mantenerlo a mano).
+  // Orden aleatorio del catálogo — se calcula una sola vez por carga de página (no se re-mezcla
+  // en cada clic de filtro), para que la colección se sienta distinta cada visita sin "saltar"
+  // mientras el cliente está filtrando o buscando.
+  const ordenAleatorioIndex = React.useMemo(() => {
+    const ids = PRODUCTS.map((p) => p.id);
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    const mapa = new Map<number, number>();
+    ids.forEach((id, idx) => mapa.set(id, idx));
+    return mapa;
+  }, [PRODUCTS]);
+
   const todosLosAromas = React.useMemo(() => {
     const set = new Set<string>();
     PRODUCTS.forEach((p) => {
@@ -492,11 +507,17 @@ export function Landing() {
         });
         break;
       default:
-        break; // "relevancia" = orden original del catálogo (más recientes primero)
+        // "relevancia" = orden aleatorio, estable mientras no se recargue el catálogo
+        ordenada.sort((a, b) => (ordenAleatorioIndex.get(a.id) ?? 0) - (ordenAleatorioIndex.get(b.id) ?? 0));
+        break;
     }
 
+    // Sin importar el orden elegido: los agotados nunca se muestran de primeros.
+    // A medida que un perfume se agota, va bajando solo hasta el final de la lista.
+    ordenada.sort((a, b) => (perfumeAgotado(a) ? 1 : 0) - (perfumeAgotado(b) ? 1 : 0));
+
     return ordenada;
-  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroConcentraciones, filtroAromas, filtroInspirados, soloDecants, soloOfertas, orden]);
+  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroConcentraciones, filtroAromas, filtroInspirados, soloDecants, soloOfertas, orden, ordenAleatorioIndex]);
 
   // De entrada solo se muestra un adelanto del catálogo (más liviano de cargar).
   // Apenas hay una búsqueda o un filtro activo, o el cliente pide ver todo, se muestran todos los resultados.
@@ -524,6 +545,12 @@ export function Landing() {
     });
     return minimo === Number.POSITIVE_INFINITY ? null : minimo;
   }, [productosConDecants]);
+
+  // Al hacer clic en la lupa del encabezado: baja hasta el buscador de la colección y lo enfoca.
+  const irABuscar = () => {
+    document.getElementById("coleccion")?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => searchInputRef.current?.focus(), 450);
+  };
 
   const irADecants = () => {
     limpiarFiltros();
@@ -739,7 +766,11 @@ export function Landing() {
                 <TikTokIcon size={15} />
               </a>
             </div>
-            <button className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}>
+            <button
+              onClick={irABuscar}
+              aria-label="Buscar en la colección"
+              className={`hover:text-[#C9A96E] transition-colors ${isScrolled ? "text-[#F8F5F2]" : "text-[#F8F5F2]"}`}
+            >
               <Search size={19} />
             </button>
             <button
@@ -835,6 +866,7 @@ export function Landing() {
               <div className="relative flex-1">
                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A0A0A0]" />
                 <input
+                  ref={searchInputRef}
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
