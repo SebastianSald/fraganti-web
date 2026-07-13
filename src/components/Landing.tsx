@@ -1177,18 +1177,19 @@ export function Landing() {
               </>
             ) : quizMatch ? (
               <>
-                {/* Panel oscuro: foto del match dentro del anillo dorado */}
-                <div className={`bg-[#1A1A1A] px-6 md:px-8 py-6 md:py-10 md:w-[38%] flex flex-row md:flex-col items-center md:items-start justify-between gap-4 transition-all duration-700 ease-out ${quizAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
-                  <div className="flex items-center gap-4 md:flex-col md:items-start">
-                    <div className="w-14 h-14 md:w-20 md:h-20 rounded-full border-2 border-[#C9A96E] overflow-hidden flex-shrink-0 md:mb-5">
+                {/* Panel oscuro: foto del match, más grande y centrada, con halo dorado */}
+                <div className={`bg-[#1A1A1A] px-6 md:px-8 py-8 md:py-10 md:w-[38%] flex flex-row md:flex-col items-center justify-center gap-5 md:gap-0 text-left md:text-center transition-all duration-700 ease-out ${quizAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
+                  <div className="relative flex-shrink-0">
+                    <div className="absolute inset-0 bg-[#C9A96E] rounded-full blur-2xl opacity-30"></div>
+                    <div className="relative w-24 h-24 md:w-40 md:h-40 rounded-full border-2 border-[#C9A96E] overflow-hidden">
                       <img src={resolverImagen(quizMatch.image)} alt={quizMatch.name} className="w-full h-full object-cover" />
                     </div>
-                    <div>
-                      <span className="inline-flex items-center gap-1.5 font-sans text-[10px] tracking-[0.14em] uppercase text-[#C9A96E]">
-                        <Star size={11} fill="currentColor" /> Tu Match
-                      </span>
-                      <div className="font-serif text-xl md:text-2xl leading-tight text-[#F8F5F2] mt-1">Perfecto</div>
-                    </div>
+                  </div>
+                  <div className="md:mt-6">
+                    <span className="inline-flex items-center gap-1.5 font-sans text-[10px] tracking-[0.14em] uppercase text-[#C9A96E]">
+                      <Star size={11} fill="currentColor" /> Tu Match
+                    </span>
+                    <div className="font-serif text-xl md:text-2xl leading-tight text-[#F8F5F2] mt-1">Perfecto</div>
                   </div>
                 </div>
 
