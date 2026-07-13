@@ -1132,62 +1132,79 @@ export function Landing() {
             </div>
           </FadeIn>
 
-          <div className="bg-white rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] p-8 md:p-12 relative overflow-hidden min-h-[400px] flex flex-col justify-center border border-[#E8E8E8]">
+          <div className="rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] overflow-hidden border border-[#E8E8E8] min-h-[420px] flex flex-col md:flex-row">
             {quizStep < 4 ? (
-              <div className={`transition-opacity duration-300 w-full ${quizAnimating ? "opacity-0" : "opacity-100"}`}>
-                <div className="flex justify-between items-center mb-8">
-                  <span className="text-sm font-medium text-[#A0A0A0]">Pregunta {quizStep + 1} de 4</span>
-                  <div className="flex gap-1">
-                    {[0, 1, 2, 3].map(step => (
-                      <div key={step} className={`h-1 w-8 rounded-full ${step <= quizStep ? "bg-[#C9A96E]" : "bg-[#F0F0F0]"}`}></div>
+              <>
+                {/* Panel oscuro: número de pregunta + progreso */}
+                <div className={`bg-[#1A1A1A] px-6 md:px-8 py-6 md:py-10 md:w-[38%] flex flex-row md:flex-col items-center md:items-start justify-between gap-4 transition-opacity duration-300 ${quizAnimating ? "opacity-0" : "opacity-100"}`}>
+                  <div className="flex items-center gap-4 md:flex-col md:items-start">
+                    <div className="w-11 h-11 rounded-full border border-[#C9A96E]/50 flex items-center justify-center flex-shrink-0 md:mb-6">
+                      <img src="/images/logo-fraganti.png" alt="" className="w-6 h-6 object-contain opacity-80" />
+                    </div>
+                    <div>
+                      <span className="font-sans text-[10px] tracking-[0.14em] uppercase text-[#C9A96E]">Pregunta</span>
+                      <div className="font-serif text-4xl md:text-6xl leading-none text-[#F8F5F2] mt-1">
+                        {String(quizStep + 1).padStart(2, "0")}
+                      </div>
+                      <div className="font-sans text-xs text-[#8A8A8A] mt-1">de 04</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5 md:flex-col md:mt-10">
+                    {[0, 1, 2, 3].map((step) => (
+                      <div key={step} className={`w-5 h-[3px] md:w-5 md:h-[3px] rounded-full ${step <= quizStep ? "bg-[#C9A96E]" : "bg-[#444]"}`}></div>
                     ))}
                   </div>
                 </div>
-                
-                <h3 className="font-serif text-2xl md:text-3xl text-[#1A1A1A] mb-8 text-center">
-                  {QUIZ_QUESTIONS[quizStep].question}
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {QUIZ_QUESTIONS[quizStep].options.map((option, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleQuizAnswer(option)}
-                      className="px-6 py-5 rounded-lg border border-[#E0E0E0] text-left hover:border-[#C9A96E] hover:bg-[#FDFBF7] hover:shadow-sm transition-all group relative overflow-hidden"
-                    >
-                      <span className="relative z-10 font-medium text-[#333] group-hover:text-[#1A1A1A]">{option.label}</span>
-                      <div className="absolute top-0 right-0 h-full w-1 bg-[#C9A96E] transform translate-x-full group-hover:translate-x-0 transition-transform"></div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : quizMatch ? (
-              <div className={`transition-all duration-700 ease-out flex flex-col md:flex-row gap-8 items-center ${quizAnimating ? "opacity-0 scale-95 blur-sm" : "opacity-100 scale-100 blur-0"}`}>
-                <div className="w-full md:w-1/2 flex justify-center">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-[#C9A96E] rounded-full blur-[60px] opacity-20"></div>
-                    <img
-                      src={resolverImagen(quizMatch.image)}
-                      alt={quizMatch.name}
-                      className="w-48 h-48 object-cover rounded-full relative z-10 drop-shadow-2xl border-4 border-white"
-                    />
+
+                {/* Panel claro: pregunta + respuestas */}
+                <div className={`bg-[#F8F5F2] px-6 md:px-8 py-10 md:w-[62%] flex flex-col justify-center transition-opacity duration-300 ${quizAnimating ? "opacity-0" : "opacity-100"}`}>
+                  <h3 className="font-serif text-2xl md:text-3xl text-[#1A1A1A] mb-6 leading-snug">
+                    {QUIZ_QUESTIONS[quizStep].question}
+                  </h3>
+                  <div>
+                    {QUIZ_QUESTIONS[quizStep].options.map((option, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleQuizAnswer(option)}
+                        className="w-full flex items-baseline gap-4 py-4 border-b border-[#E5E0D5] last:border-b-0 text-left group hover:pl-1.5 transition-all duration-200"
+                      >
+                        <span className="font-serif text-sm text-[#C9A96E] flex-shrink-0">{String.fromCharCode(65 + idx)}</span>
+                        <span className="font-medium text-[#333] group-hover:text-[#1A1A1A] transition-colors">{option.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <div className="w-full md:w-1/2 text-center md:text-left">
-                  <span className="inline-flex items-center gap-2 text-[#C9A96E] text-xs font-semibold tracking-widest uppercase mb-4 bg-[#FDFBF7] px-3 py-1 rounded-full border border-[#C9A96E]/20">
-                    <Star size={12} fill="currentColor" /> Tu Match Perfecto
-                  </span>
+              </>
+            ) : quizMatch ? (
+              <>
+                {/* Panel oscuro: foto del match dentro del anillo dorado */}
+                <div className={`bg-[#1A1A1A] px-6 md:px-8 py-6 md:py-10 md:w-[38%] flex flex-row md:flex-col items-center md:items-start justify-between gap-4 transition-all duration-700 ease-out ${quizAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
+                  <div className="flex items-center gap-4 md:flex-col md:items-start">
+                    <div className="w-14 h-14 md:w-20 md:h-20 rounded-full border-2 border-[#C9A96E] overflow-hidden flex-shrink-0 md:mb-5">
+                      <img src={resolverImagen(quizMatch.image)} alt={quizMatch.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 font-sans text-[10px] tracking-[0.14em] uppercase text-[#C9A96E]">
+                        <Star size={11} fill="currentColor" /> Tu Match
+                      </span>
+                      <div className="font-serif text-xl md:text-2xl leading-tight text-[#F8F5F2] mt-1">Perfecto</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Panel claro: detalle del perfume + CTA */}
+                <div className={`bg-[#F8F5F2] px-6 md:px-8 py-10 md:w-[62%] flex flex-col justify-center transition-all duration-700 ease-out ${quizAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
                   <h3 className="font-serif text-3xl md:text-4xl text-[#1A1A1A] mb-2">
                     {quizMatch.name}
                   </h3>
-                  <p className="font-serif italic text-[#5A5A5A] mb-6 text-lg">
+                  <p className="font-serif italic text-[#5A5A5A] mb-5 text-lg">
                     {quizMatch.family} · {quizMatch.notasCorta}
                   </p>
                   <p className="text-[#333] text-sm leading-relaxed mb-8">
                     Basado en tu estilo <strong>{quizAnswers[0]?.label.toLowerCase()}</strong> y tu preferencia por notas <strong>{quizAnswers[3]?.label.toLowerCase()}</strong>, esta fragancia de nuestra colección es la que mejor encaja contigo.
                   </p>
 
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start">
                     <button
                       onClick={() => setQuickViewId(quizMatch.id)}
                       className="btn-gold px-8 py-4 rounded-sm font-medium tracking-wide text-sm w-full sm:w-auto"
@@ -1199,9 +1216,9 @@ export function Landing() {
                     </button>
                   </div>
                 </div>
-              </div>
+              </>
             ) : (
-              <div className="text-center text-[#5A5A5A]">
+              <div className="w-full bg-[#F8F5F2] flex flex-col items-center justify-center text-center text-[#5A5A5A] py-20 px-8">
                 <p className="mb-4">Todavía estamos cargando el catálogo — dale un segundo e inténtalo de nuevo.</p>
                 <button onClick={resetQuiz} className="text-[#C9A96E] underline text-sm">Reintentar</button>
               </div>
