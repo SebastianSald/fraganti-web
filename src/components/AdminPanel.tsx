@@ -5,7 +5,7 @@ import { supabase, supabaseConfigured } from "../lib/supabaseClient";
 import {
   loadPerfumes, actualizarPerfume, crearPerfume, eliminarPerfume, nuevoPerfumeVacio, nuevoTamanoVacio,
   variantesOfrecidas, perfumeAgotado, perfumeEnOferta, labelTamano, resolverImagen,
-  FAMILIAS_CATALOGO, GENEROS_CATALOGO, FORMATO_LABELS, DECANT_KEYS,
+  FAMILIAS_CATALOGO, GENEROS_CATALOGO, CONCENTRACIONES_CATALOGO, FORMATO_LABELS, DECANT_KEYS,
   type Perfume, type FormatoDecantKey, type TamanoCompleto,
 } from "../data/perfumes";
 
@@ -347,7 +347,7 @@ function PerfumeCard({
         <span className="font-serif text-xl">{draft.name || "(Sin nombre)"}</span>
         {agotado && <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-full font-semibold">AGOTADO</span>}
         {!agotado && enOferta && <span className="text-[10px] bg-[#C9A96E] text-[#1A1A1A] px-2 py-0.5 rounded-full font-semibold">OFERTA</span>}
-        <span className="ml-auto text-xs uppercase tracking-wide text-[#B89250]">{draft.family} · {draft.genero}</span>
+        <span className="ml-auto text-xs uppercase tracking-wide text-[#B89250]">{draft.family} · {draft.genero}{draft.concentracion ? ` · ${draft.concentracion}` : ""}</span>
         <ChevronDown size={18} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
@@ -366,7 +366,7 @@ function PerfumeCard({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div>
               <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">Familia olfativa</label>
               <select className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm bg-white" value={draft.family}
@@ -379,6 +379,14 @@ function PerfumeCard({
               <select className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm bg-white" value={draft.genero}
                 onChange={(e) => setDraft({ ...draft, genero: e.target.value as Perfume["genero"] })}>
                 {GENEROS_CATALOGO.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-1">Concentración</label>
+              <select className="w-full px-3 py-2 border border-[#E0E0E0] rounded text-sm bg-white" value={draft.concentracion || ""}
+                onChange={(e) => setDraft({ ...draft, concentracion: e.target.value })}>
+                <option value="">Sin especificar</option>
+                {CONCENTRACIONES_CATALOGO.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>

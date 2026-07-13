@@ -9,6 +9,8 @@ import { useCart } from "../context/CartContext";
 interface QuickViewModalProps {
   product: Perfume | null;
   onClose: () => void;
+  /** Se llama al hacer clic en "Inspirado en X" — filtra la colección por esa inspiración. */
+  onInspiradoClick: (inspirado: string) => void;
 }
 
 function NoteRow({ label, values }: { label: string; values: string[] }) {
@@ -31,7 +33,7 @@ function NoteRow({ label, values }: { label: string; values: string[] }) {
   );
 }
 
-export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
+export function QuickViewModal({ product, onClose, onInspiradoClick }: QuickViewModalProps) {
   const [selected, setSelected] = useState<Variante | null>(null);
   const { addToCart } = useCart();
   const [agregado, setAgregado] = useState(false);
@@ -103,13 +105,17 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           {/* Details */}
           <div className="p-8 md:p-10 flex flex-col">
             <span className="text-[#C9A96E] text-xs font-semibold tracking-widest uppercase mb-2">
-              {product.family}
+              {product.family}{product.concentracion ? ` · ${product.concentracion}` : ""}
             </span>
             <h3 className="font-serif text-3xl text-[#1A1A1A] mb-1">{product.name}</h3>
             {product.inspiradoEn && (
-              <p className="text-[#A0A0A0] text-xs italic font-serif mb-4">
+              <button
+                type="button"
+                onClick={() => onInspiradoClick(product.inspiradoEn!)}
+                className="text-[#A0A0A0] text-xs italic font-serif mb-4 text-left hover:text-[#C9A96E] transition-colors underline decoration-dotted underline-offset-2 w-fit"
+              >
                 Inspirado en {product.inspiradoEn}
-              </p>
+              </button>
             )}
 
             {/* Selector de formato */}

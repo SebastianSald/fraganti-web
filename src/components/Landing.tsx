@@ -5,7 +5,7 @@ import {
   Instagram, Check, Droplets, Star, SlidersHorizontal, Tag
 } from "lucide-react";
 import {
-  loadPerfumes, FAMILIAS_CATALOGO, GENEROS_CATALOGO, QUIZ_QUESTIONS, calcularMatchDelQuiz,
+  loadPerfumes, FAMILIAS_CATALOGO, GENEROS_CATALOGO, CONCENTRACIONES_CATALOGO, QUIZ_QUESTIONS, calcularMatchDelQuiz,
   variantesOfrecidas, perfumeAgotado, primeraVarianteDisponible, resolverImagen,
   formatoEnOferta, perfumeEnOferta, porcentajeDescuento,
   type Perfume, type Variante, type Genero, type QuizOption,
@@ -128,12 +128,15 @@ function ProductCard({
   delay,
   onQuickView,
   soloDecants,
+  onInspiradoClick,
 }: {
   product: Perfume;
   delay: number;
   onQuickView: () => void;
   /** Si está activo, esta tarjeta solo muestra y permite elegir decants — sin precios ni opción de frasco completo. */
   soloDecants: boolean;
+  /** Se llama al hacer clic en "Inspirado en X" — filtra la colección por esa inspiración. */
+  onInspiradoClick: (inspirado: string) => void;
 }) {
   const todasVariantes = variantesOfrecidas(product);
   const variantesVisibles = soloDecants ? todasVariantes.filter((v) => v.esDecant) : todasVariantes;
@@ -198,6 +201,8 @@ function ProductCard({
           <img
             src={resolverImagen(imagenActual)}
             alt={product.name}
+            loading={delay < 450 ? "eager" : "lazy"}
+            decoding="async"
             className="w-full h-full object-cover mix-blend-multiply transition-opacity duration-300"
           />
 
@@ -213,8 +218,19 @@ function ProductCard({
         </div>
 
         <div className="flex flex-col flex-grow text-center">
-          <span className="text-[#C9A96E] text-xs font-semibold tracking-widest uppercase mb-2">{product.family}</span>
+          <span className="text-[#C9A96E] text-xs font-semibold tracking-widest uppercase mb-2">
+            {product.family}{product.concentracion ? ` · ${product.concentracion}` : ""}
+          </span>
           <h3 className="font-serif text-2xl text-[#1A1A1A] mb-1">{product.name}</h3>
+          {product.inspiradoEn && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onInspiradoClick(product.inspiradoEn!); }}
+              className="text-[#A0A0A0] text-xs italic font-serif mb-1 hover:text-[#C9A96E] transition-colors underline decoration-dotted underline-offset-2"
+            >
+              Inspirado en {product.inspiradoEn}
+            </button>
+          )}
           <p className="text-[#5A5A5A] text-sm italic mb-4 flex-grow font-serif">{product.notasCorta}</p>
 
           {/* Selector de variante: solo se muestran las que el negocio ofrece (y, en modo Solo Decants, solo decants) */}
@@ -293,10 +309,16 @@ export function Landing() {
   const [orden, setOrden] = useState<OrdenCatalogo>("relevancia");
   const [filtroFamilias, setFiltroFamilias] = useState<string[]>([]);
   const [filtroGeneros, setFiltroGeneros] = useState<Genero[]>([]);
+  const [filtroConcentraciones, setFiltroConcentraciones] = useState<string[]>([]);
   const [filtroAromas, setFiltroAromas] = useState<string[]>([]);
+  const [filtroInspirados, setFiltroInspirados] = useState<string[]>([]);
   const [soloDecants, setSoloDecants] = useState(false);
   const [soloOfertas, setSoloOfertas] = useState(false);
   const [panelFiltrosAbierto, setPanelFiltrosAbierto] = useState(false);
+  // De entrada solo se muestra una parte del catálogo (más rápido de cargar);
+  // "Ver todo el catálogo" revela el resto sin necesidad de filtrar o buscar.
+  const [mostrarTodoElCatalogo, setMostrarTodoElCatalogo] = useState(false);
+  const LIMITE_CATALOGO_INICIAL = 9;
   
   const [quizStep, setQuizStep] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<QuizOption[]>([]);
@@ -363,10 +385,17 @@ export function Landing() {
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
   }, [PRODUCTS]);
 
+  // Todos los "inspirado en" distintos que existen en el catálogo actual (sin vacíos), para el filtro.
+  const todosLosInspirados = React.useMemo(() => {
+    const set = new Set<string>();
+    PRODUCTS.forEach((p) => { if (p.inspiradoEn?.trim()) set.add(p.inspiradoEn.trim()); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
+  }, [PRODUCTS]);
+
   const toggleEnLista = <T,>(lista: T[], valor: T): T[] =>
     lista.includes(valor) ? lista.filter((v) => v !== valor) : [...lista, valor];
 
-  const hayFiltrosActivos = filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || soloOfertas || searchTerm.trim() !== "";
+  const hayFiltrosActivos = filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroConcentraciones.length > 0 || filtroAromas.length > 0 || filtroInspirados.length > 0 || soloDecants || soloOfertas || searchTerm.trim() !== "";
 
   // Resumen de todos los filtros activos, como etiquetas individuales que se pueden quitar una por una.
   const chipsActivos = React.useMemo(() => {
@@ -374,17 +403,21 @@ export function Landing() {
     if (searchTerm.trim()) chips.push({ key: "buscar", label: `"${searchTerm.trim()}"`, onQuitar: () => setSearchTerm("") });
     filtroFamilias.forEach((f) => chips.push({ key: `familia-${f}`, label: f, onQuitar: () => setFiltroFamilias((prev) => prev.filter((x) => x !== f)) }));
     filtroGeneros.forEach((g) => chips.push({ key: `genero-${g}`, label: g, onQuitar: () => setFiltroGeneros((prev) => prev.filter((x) => x !== g)) }));
+    filtroConcentraciones.forEach((c) => chips.push({ key: `concentracion-${c}`, label: c, onQuitar: () => setFiltroConcentraciones((prev) => prev.filter((x) => x !== c)) }));
     filtroAromas.forEach((a) => chips.push({ key: `aroma-${a}`, label: a, onQuitar: () => setFiltroAromas((prev) => prev.filter((x) => x !== a)) }));
+    filtroInspirados.forEach((i) => chips.push({ key: `inspirado-${i}`, label: `Inspirado en ${i}`, onQuitar: () => setFiltroInspirados((prev) => prev.filter((x) => x !== i)) }));
     if (soloDecants) chips.push({ key: "decants", label: "Solo Decants", onQuitar: () => setSoloDecants(false) });
     if (soloOfertas) chips.push({ key: "ofertas", label: "En Oferta", onQuitar: () => setSoloOfertas(false) });
     return chips;
-  }, [searchTerm, filtroFamilias, filtroGeneros, filtroAromas, soloDecants, soloOfertas]);
+  }, [searchTerm, filtroFamilias, filtroGeneros, filtroConcentraciones, filtroAromas, filtroInspirados, soloDecants, soloOfertas]);
 
   const limpiarFiltros = () => {
     setSearchTerm("");
     setFiltroFamilias([]);
     setFiltroGeneros([]);
+    setFiltroConcentraciones([]);
     setFiltroAromas([]);
+    setFiltroInspirados([]);
     setSoloDecants(false);
     setSoloOfertas(false);
     setOrden("relevancia");
@@ -395,7 +428,9 @@ export function Landing() {
 
     if (searchTerm.trim()) {
       const termino = normalizarTexto(searchTerm.trim());
-      lista = lista.filter((p) => normalizarTexto(p.name).includes(termino));
+      lista = lista.filter((p) =>
+        normalizarTexto(p.name).includes(termino) || normalizarTexto(p.inspiradoEn || "").includes(termino)
+      );
     }
 
     // Cada filtro es una INTERSECCIÓN: si marcas varios valores en un mismo grupo,
@@ -411,11 +446,19 @@ export function Landing() {
       lista = lista.filter((p) => filtroGeneros.every((g) => g === p.genero));
     }
 
+    if (filtroConcentraciones.length > 0) {
+      lista = lista.filter((p) => filtroConcentraciones.every((c) => c === p.concentracion));
+    }
+
     if (filtroAromas.length > 0) {
       lista = lista.filter((p) => {
         const notasPerfume = [...p.notas.salida, ...p.notas.corazon, ...p.notas.fondo];
         return filtroAromas.every((aroma) => notasPerfume.includes(aroma));
       });
+    }
+
+    if (filtroInspirados.length > 0) {
+      lista = lista.filter((p) => filtroInspirados.every((i) => i === (p.inspiradoEn || "").trim()));
     }
 
     if (soloDecants) {
@@ -453,7 +496,14 @@ export function Landing() {
     }
 
     return ordenada;
-  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroAromas, soloDecants, soloOfertas, orden]);
+  }, [PRODUCTS, searchTerm, filtroFamilias, filtroGeneros, filtroConcentraciones, filtroAromas, filtroInspirados, soloDecants, soloOfertas, orden]);
+
+  // De entrada solo se muestra un adelanto del catálogo (más liviano de cargar).
+  // Apenas hay una búsqueda o un filtro activo, o el cliente pide ver todo, se muestran todos los resultados.
+  const productosAMostrar = React.useMemo(() => {
+    if (mostrarTodoElCatalogo || hayFiltrosActivos) return filteredProducts;
+    return filteredProducts.slice(0, LIMITE_CATALOGO_INICIAL);
+  }, [filteredProducts, mostrarTodoElCatalogo, hayFiltrosActivos]);
 
   // Perfumes que sí se venden en decant (5ml o 10ml) — para la sección de Decants.
   const productosConDecants = React.useMemo(
@@ -478,6 +528,16 @@ export function Landing() {
   const irADecants = () => {
     limpiarFiltros();
     setSoloDecants(true);
+    setTimeout(() => {
+      document.getElementById("coleccion")?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  };
+
+  // Al hacer clic en "Inspirado en X" (tarjeta o vista rápida), filtra la colección por esa inspiración.
+  const filtrarPorInspirado = (inspirado: string) => {
+    limpiarFiltros();
+    setFiltroInspirados([inspirado]);
+    setQuickViewId(null);
     setTimeout(() => {
       document.getElementById("coleccion")?.scrollIntoView({ behavior: "smooth" });
     }, 50);
@@ -778,7 +838,7 @@ export function Landing() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar perfume por nombre..."
+                  placeholder="Buscar por nombre o por a qué está inspirado..."
                   className="w-full pl-11 pr-4 py-3 rounded-full border border-[#d1cec7] bg-white text-sm outline-none focus:border-[#C9A96E] transition-colors"
                 />
               </div>
@@ -820,15 +880,15 @@ export function Landing() {
             <button
               onClick={() => setPanelFiltrosAbierto((v) => !v)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm border transition-all duration-300 ${
-                panelFiltrosAbierto || filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroAromas.length > 0 || soloDecants || soloOfertas
+                panelFiltrosAbierto || filtroFamilias.length > 0 || filtroGeneros.length > 0 || filtroConcentraciones.length > 0 || filtroAromas.length > 0 || filtroInspirados.length > 0 || soloDecants || soloOfertas
                 ? "bg-[#C9A96E] text-[#1A1A1A] border-[#C9A96E]"
                 : "bg-transparent text-[#5A5A5A] border-[#d1cec7] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
               }`}
             >
               <SlidersHorizontal size={14} />
               Filtros
-              {(filtroFamilias.length + filtroGeneros.length + filtroAromas.length + Number(soloDecants) + Number(soloOfertas)) > 0 &&
-                ` (${filtroFamilias.length + filtroGeneros.length + filtroAromas.length + Number(soloDecants) + Number(soloOfertas)})`}
+              {(filtroFamilias.length + filtroGeneros.length + filtroConcentraciones.length + filtroAromas.length + filtroInspirados.length + Number(soloDecants) + Number(soloOfertas)) > 0 &&
+                ` (${filtroFamilias.length + filtroGeneros.length + filtroConcentraciones.length + filtroAromas.length + filtroInspirados.length + Number(soloDecants) + Number(soloOfertas)})`}
               <ChevronRight size={14} className={`transition-transform duration-300 ${panelFiltrosAbierto ? "rotate-90" : ""}`} />
             </button>
 
@@ -859,7 +919,7 @@ export function Landing() {
 
                 <div className="h-px bg-[#F0EEE9] mb-6"></div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <div>
                     <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Género</span>
                     <div className="flex flex-wrap gap-2">
@@ -874,6 +934,25 @@ export function Landing() {
                           }`}
                         >
                           {genero}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Concentración</span>
+                    <div className="flex flex-wrap gap-2">
+                      {CONCENTRACIONES_CATALOGO.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setFiltroConcentraciones((prev) => toggleEnLista(prev, c))}
+                          className={`px-4 py-1.5 rounded-full text-xs border transition-colors ${
+                            filtroConcentraciones.includes(c)
+                            ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
+                            : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                          }`}
+                        >
+                          {c}
                         </button>
                       ))}
                     </div>
@@ -927,6 +1006,30 @@ export function Landing() {
                   </div>
                 </div>
 
+                {todosLosInspirados.length > 0 && (
+                  <>
+                    <div className="h-px bg-[#F0EEE9] my-6"></div>
+                    <div>
+                      <span className="block text-xs font-semibold uppercase tracking-widest text-[#B89250] mb-2.5">Inspirado en</span>
+                      <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                        {todosLosInspirados.map((insp) => (
+                          <button
+                            key={insp}
+                            onClick={() => setFiltroInspirados((prev) => toggleEnLista(prev, insp))}
+                            className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                              filtroInspirados.includes(insp)
+                              ? "bg-[#1A1A1A] text-[#F8F5F2] border-[#1A1A1A]"
+                              : "border-[#d1cec7] text-[#5A5A5A] hover:border-[#1A1A1A] hover:text-[#1A1A1A]"
+                            }`}
+                          >
+                            {insp}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 {hayFiltrosActivos && (
                   <div className="mt-6 pt-5 border-t border-[#F0EEE9] flex items-center justify-between flex-wrap gap-3">
                     <span className="text-xs text-[#A0A0A0]">{filteredProducts.length} resultado{filteredProducts.length === 1 ? "" : "s"}</span>
@@ -941,17 +1044,43 @@ export function Landing() {
         </FadeIn>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {filteredProducts.map((product, index) => (
+          {productosAMostrar.map((product, index) => (
             <ProductCard
               key={product.id}
               product={product}
               delay={index * 150}
               onQuickView={() => setQuickViewId(product.id)}
               soloDecants={soloDecants}
+              onInspiradoClick={filtrarPorInspirado}
             />
           ))}
         </div>
-        
+
+        {!hayFiltrosActivos && !mostrarTodoElCatalogo && filteredProducts.length > LIMITE_CATALOGO_INICIAL && (
+          <div className="text-center mt-14">
+            <button
+              onClick={() => setMostrarTodoElCatalogo(true)}
+              className="border border-[#1A1A1A] text-[#1A1A1A] px-10 py-4 rounded-sm font-medium tracking-wide text-sm hover:bg-[#1A1A1A] hover:text-[#F8F5F2] transition-colors"
+            >
+              VER TODO EL CATÁLOGO ({filteredProducts.length})
+            </button>
+          </div>
+        )}
+
+        {!hayFiltrosActivos && mostrarTodoElCatalogo && filteredProducts.length > LIMITE_CATALOGO_INICIAL && (
+          <div className="text-center mt-14">
+            <button
+              onClick={() => {
+                setMostrarTodoElCatalogo(false);
+                document.getElementById("coleccion")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="text-sm text-[#C9A96E] underline hover:text-[#1A1A1A] transition-colors"
+            >
+              Mostrar menos
+            </button>
+          </div>
+        )}
+
         {filteredProducts.length === 0 && (
           <div className="text-center py-20 text-[#5A5A5A]">
             <p>No se encontraron perfumes con esos filtros.</p>
@@ -1110,6 +1239,8 @@ export function Landing() {
                           <img
                             src={resolverImagen(p.imagenAbierta || p.image)}
                             alt={p.name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover mix-blend-luminosity opacity-90 group-hover:opacity-100 group-hover:mix-blend-normal transition-all duration-300"
                           />
                           <span className="absolute top-2.5 right-2.5 bg-[#C9A96E] text-[#1A1A1A] text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide">
@@ -1440,7 +1571,7 @@ export function Landing() {
       </a>
 
       {/* QUICK VIEW MODAL — pirámide olfativa de Fragantica */}
-      <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewId(null)} />
+      <QuickViewModal product={quickViewProduct} onClose={() => setQuickViewId(null)} onInspiradoClick={filtrarPorInspirado} />
 
       {/* CARRITO */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} whatsappNumber={CONTACT.whatsappNumber} />

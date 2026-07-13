@@ -47,12 +47,23 @@ export type Genero = "Masculino" | "Femenino" | "Unisex";
 
 export const GENEROS_CATALOGO: Genero[] = ["Masculino", "Femenino", "Unisex"];
 
+/** Concentración del perfume (opcional) — también se usa como filtro en la tienda. */
+export const CONCENTRACIONES_CATALOGO: string[] = [
+  "Eau de Parfum",
+  "Eau de Toilette",
+  "Extrait de Parfum",
+  "Eau de Cologne",
+  "Parfum Oil",
+];
+
 export interface Perfume {
   id: number;
   name: string;
   inspiradoEn?: string;
   family: string;
   genero: Genero;
+  /** Concentración (ej. "Eau de Parfum"). Vacío/"" = no especificada — no aparece en el filtro. */
+  concentracion?: string;
   image: string;
   /**
    * Foto opcional de la botella/decant ABIERTO. Si existe, se muestra en vez
@@ -219,6 +230,7 @@ function filaASupaPerfume(row: any): Perfume {
     inspiradoEn: row.inspirado_en || "",
     family: row.family,
     genero: row.genero || "Unisex",
+    concentracion: row.concentracion || "",
     image: row.image,
     imagenAbierta: row.imagen_abierta || "",
     isNew: !!row.is_new,
@@ -238,6 +250,7 @@ function perfumeAFila(p: Partial<Perfume>) {
   if (p.inspiradoEn !== undefined) fila.inspirado_en = p.inspiradoEn;
   if (p.family !== undefined) fila.family = p.family;
   if (p.genero !== undefined) fila.genero = p.genero;
+  if (p.concentracion !== undefined) fila.concentracion = p.concentracion;
   if (p.image !== undefined) fila.image = p.image;
   if (p.imagenAbierta !== undefined) fila.imagen_abierta = p.imagenAbierta;
   if (p.isNew !== undefined) fila.is_new = p.isNew;
@@ -255,6 +268,7 @@ async function cargarDesdeRespaldo(): Promise<Perfume[]> {
   return data.map((item: any) => ({
     ...item,
     genero: item.genero || "Unisex",
+    concentracion: item.concentracion || "",
     imagenAbierta: item.imagenAbierta || "",
     formatos: {
       completo: normalizarCompleto(item.formatos?.completo),
@@ -311,6 +325,7 @@ export function nuevoPerfumeVacio(): Omit<Perfume, "id"> {
     inspiradoEn: "",
     family: "Floral",
     genero: "Unisex",
+    concentracion: "",
     image: "",
     imagenAbierta: "",
     isNew: false,
