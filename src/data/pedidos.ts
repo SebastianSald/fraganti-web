@@ -54,22 +54,25 @@ function filaAPedido(row: any): Pedido {
  * Esta tabla es un respaldo/registro adicional, no la única fuente de verdad del pedido.
  */
 export async function crearPedido(p: Omit<Pedido, "id" | "creadoEn" | "estado">): Promise<void> {
-  if (!supabaseConfigured || !supabase) return;
-  try {
-    await supabase.from("pedidos").insert({
-      referencia: p.referencia,
-      items: p.items,
-      subtotal: p.subtotal,
-      descuento: p.descuento,
-      total: p.total,
-      metodo: p.metodo,
-      metodo_pago_nombre: p.metodoPagoNombre || null,
-      cupon_codigo: p.cuponCodigo || null,
-      estado: "pendiente",
-    });
-  } catch (e) {
-    // Silencioso a propósito — ver comentario arriba.
-    console.error("[Pedidos] No se pudo guardar el pedido de respaldo:", e);
+  if (!supabaseConfigured || !supabase) {
+    console.error("[Pedidos] Supabase no está configurado — el pedido no se guardó como respaldo.");
+    return;
+  }
+  const { error } = await supabase.from("pedidos").insert({
+    referencia: p.referencia,
+    items: p.items,
+    subtotal: p.subtotal,
+    descuento: p.descuento,
+    total: p.total,
+    metodo: p.metodo,
+    metodo_pago_nombre: p.metodoPagoNombre || null,
+    cupon_codigo: p.cuponCodigo || null,
+    estado: "pendiente",
+  });
+  if (error) {
+    // Silencioso para el cliente a propósito (no debe romper el checkout),
+    // pero SÍ queda registrado en la consola para que se pueda diagnosticar.
+    console.error("[Pedidos] No se pudo guardar el pedido de respaldo:", error.message, error);
   }
 }
 
