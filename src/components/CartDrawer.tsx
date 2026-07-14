@@ -6,6 +6,17 @@ import { METODOS_PAGO } from "../data/pagos";
 
 type MetodoCheckout = "whatsapp" | "transferencia";
 
+/**
+ * Referencia corta de pedido (ej. "FR-8K2QZ"). Se genera una vez por visita y viaja
+ * en el mensaje de WhatsApp. Hoy es solo para que el cliente y tú tengan un mismo
+ * número al hablar — pero es el mismo tipo de dato que un bot de WhatsApp (el
+ * próximo proyecto) necesitaría para identificar el pedido automáticamente y
+ * cruzarlo con el comprobante, así que se deja desde ya con ese formato en mente.
+ */
+function generarReferenciaPedido(): string {
+  return `FR-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+}
+
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,13 +29,14 @@ function construirMensajeWhatsApp(
   cuponCodigo: string | undefined,
   descuento: number,
   total: number,
-  metodo: MetodoCheckout
+  metodo: MetodoCheckout,
+  referencia: string
 ): string {
   const lineas = items.map(
     (i) => `• ${i.nombre} (${i.label}) x${i.cantidad} — ${formatearCOP(i.precioUnitario * i.cantidad)}`
   );
 
-  let mensaje = `Hola FRAGANTI 👋 quiero hacer este pedido:\n\n${lineas.join("\n")}\n\nSubtotal: ${formatearCOP(subtotal)}`;
+  let mensaje = `Hola FRAGANTI 👋 quiero hacer este pedido (Ref. ${referencia}):\n\n${lineas.join("\n")}\n\nSubtotal: ${formatearCOP(subtotal)}`;
 
   if (cuponCodigo && descuento > 0) {
     mensaje += `\nCupón ${cuponCodigo.toUpperCase()}: -${formatearCOP(descuento)}`;
@@ -45,6 +57,7 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
   const [codigoInput, setCodigoInput] = useState("");
   const [metodo, setMetodo] = useState<MetodoCheckout>("whatsapp");
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
+  const [referencia] = useState(generarReferenciaPedido);
   const hayMetodosPago = METODOS_PAGO.length > 0;
 
   if (!isOpen) return null;
@@ -65,7 +78,7 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
   };
 
   const handleCheckout = () => {
-    const mensaje = construirMensajeWhatsApp(items, subtotal, cupon?.codigo, descuento, total, metodo);
+    const mensaje = construirMensajeWhatsApp(items, subtotal, cupon?.codigo, descuento, total, metodo, referencia);
     const url = `https://wa.me/${numeroLimpio}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
@@ -92,8 +105,9 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
           </button>
         </div>
 
-        {/* Items */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-5">
+        {/* Items + footer, en un solo scroll — así el botón de pago nunca queda fuera de pantalla */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="px-6 py-5">
           {vacio ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-[#A0A0A0] gap-3 py-16">
               <ShoppingBag size={40} className="opacity-40" />
@@ -155,11 +169,11 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
               </button>
             </div>
           )}
-        </div>
+          </div>
 
-        {/* Footer: cupón + totales + checkout */}
+        {/* Footer: cupón + totales + checkout — pegajoso al fondo del scroll */}
         {!vacio && (
-          <div className="border-t border-[#E5E0D5] px-6 py-5 space-y-4">
+          <div className="sticky bottom-0 bg-[#F8F5F2] border-t border-[#E5E0D5] px-6 py-5 space-y-4">
             {/* Cupón */}
             {cupon ? (
               <div className="flex items-center justify-between bg-[#F0F7ED] border border-[#C9E4B8] rounded-md px-3 py-2">
@@ -258,11 +272,19 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
                           </button>
                         </div>
                         {m.qrImagen && (
-                          <img
-                            src={resolverImagen(m.qrImagen)}
-                            alt={`Código QR ${m.nombre}`}
-                            className="w-32 h-32 object-contain mt-3 mx-auto"
-                          />
+                          <a
+                            href={resolverImagen(m.qrImagen)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block mt-3 bg-white border border-[#E5E0D5] rounded-lg p-4 hover:border-[#C9A96E] transition-colors"
+                          >
+                            <img
+                              src={resolverImagen(m.qrImagen)}
+                              alt={`Código QR ${m.nombre}`}
+                              className="w-full max-w-[220px] aspect-square object-contain mx-auto"
+                            />
+                            <p className="text-[11px] text-[#C9A96E] text-center mt-2 font-medium">Toca para ampliar y escanear</p>
+                          </a>
                         )}
                         {m.nota && <p className="text-[10px] text-[#A0A0A0] mt-2">{m.nota}</p>}
                       </div>
@@ -272,11 +294,14 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
 
                 {/* Paso 2: avisar con el comprobante — botón propio, pegado a la info de pago */}
                 <div className="pt-1 border-t border-dashed border-[#E5E0D5]">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mt-3 mb-2">
-                    Paso 2 · Envía tu comprobante
-                  </p>
+                  <div className="flex items-center justify-between mt-3 mb-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#B89250]">
+                      Paso 2 · Envía tu comprobante
+                    </p>
+                    <span className="text-[10px] font-mono text-[#A0A0A0]">Ref. {referencia}</span>
+                  </div>
                   <p className="text-xs text-[#5A5A5A] mb-3">
-                    Ya que hayas transferido, toca el botón — se abre WhatsApp con tu pedido ya escrito, y ahí mismo adjuntas la foto o captura del comprobante para que {METODOS_PAGO[0]?.titular.split(" ")[0] || "nosotros"} confirme tu pago y el envío.
+                    Ya que hayas transferido, toca el botón — se abre WhatsApp con tu pedido ya escrito (con esta referencia incluida), y ahí mismo adjuntas la foto o captura del comprobante para que {METODOS_PAGO[0]?.titular.split(" ")[0] || "nosotros"} confirme tu pago y el envío.
                   </p>
                   <button onClick={handleCheckout} className="w-full btn-gold py-4 rounded-sm font-medium tracking-wide text-sm flex items-center justify-center gap-2">
                     <MessageCircle size={16} /> Ya pagué, enviar comprobante
@@ -301,6 +326,7 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
