@@ -190,6 +190,24 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
             )}
             {cuponError && <p className="text-xs text-red-600 -mt-2">{cuponError}</p>}
 
+            {/* Totales */}
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between text-[#5A5A5A]">
+                <span>Subtotal</span>
+                <span>{formatearCOP(subtotal)}</span>
+              </div>
+              {descuento > 0 && (
+                <div className="flex justify-between text-[#3A6B2A]">
+                  <span>Descuento</span>
+                  <span>-{formatearCOP(descuento)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-[#1A1A1A] font-semibold text-base pt-1.5 border-t border-[#E5E0D5]">
+                <span>Total</span>
+                <span>{formatearCOP(total)}</span>
+              </div>
+            </div>
+
             {/* Método de pago */}
             {hayMetodosPago && (
               <div className="grid grid-cols-2 gap-2 p-1 bg-[#EFEBE3] rounded-full">
@@ -214,73 +232,73 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
               </div>
             )}
 
-            {hayMetodosPago && metodo === "transferencia" && (
-              <div className="space-y-3">
-                {METODOS_PAGO.map((m) => (
-                  <div key={m.id} className="border border-[#E5E0D5] rounded-lg p-3 bg-white">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-[#1A1A1A]">{m.nombre}</span>
-                      {m.tipoCuenta && <span className="text-[10px] text-[#A0A0A0] uppercase tracking-wide">{m.tipoCuenta}</span>}
-                    </div>
-                    <p className="text-xs text-[#5A5A5A] mb-2">A nombre de {m.titular}</p>
-                    <div className="flex items-center justify-between bg-[#F8F5F2] rounded px-3 py-2">
-                      <span className="text-sm font-mono text-[#1A1A1A] tracking-wide">{m.numero}</span>
-                      <button
-                        type="button"
-                        onClick={() => copiarNumero(m.id, m.numero)}
-                        className="flex items-center gap-1 text-xs text-[#C9A96E] hover:text-[#1A1A1A] transition-colors flex-shrink-0"
-                      >
-                        {copiadoId === m.id ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
-                      </button>
-                    </div>
-                    {m.qrImagen && (
-                      <img
-                        src={resolverImagen(m.qrImagen)}
-                        alt={`Código QR ${m.nombre}`}
-                        className="w-32 h-32 object-contain mt-3 mx-auto"
-                      />
-                    )}
-                    {m.nota && <p className="text-[10px] text-[#A0A0A0] mt-2">{m.nota}</p>}
+            {hayMetodosPago && metodo === "transferencia" ? (
+              <div className="space-y-4">
+                {/* Paso 1: transferir */}
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mb-2">
+                    Paso 1 · Transfiere {formatearCOP(total)} a una de estas cuentas
+                  </p>
+                  <div className="space-y-3">
+                    {METODOS_PAGO.map((m) => (
+                      <div key={m.id} className="border border-[#E5E0D5] rounded-lg p-3 bg-white">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-semibold text-[#1A1A1A]">{m.nombre}</span>
+                          {m.tipoCuenta && <span className="text-[10px] text-[#A0A0A0] uppercase tracking-wide">{m.tipoCuenta}</span>}
+                        </div>
+                        <p className="text-xs text-[#5A5A5A] mb-2">A nombre de {m.titular}</p>
+                        <div className="flex items-center justify-between bg-[#F8F5F2] rounded px-3 py-2">
+                          <span className="text-sm font-mono text-[#1A1A1A] tracking-wide">{m.numero}</span>
+                          <button
+                            type="button"
+                            onClick={() => copiarNumero(m.id, m.numero)}
+                            className="flex items-center gap-1 text-xs text-[#C9A96E] hover:text-[#1A1A1A] transition-colors flex-shrink-0"
+                          >
+                            {copiadoId === m.id ? <><Check size={13} /> Copiado</> : <><Copy size={13} /> Copiar</>}
+                          </button>
+                        </div>
+                        {m.qrImagen && (
+                          <img
+                            src={resolverImagen(m.qrImagen)}
+                            alt={`Código QR ${m.nombre}`}
+                            className="w-32 h-32 object-contain mt-3 mx-auto"
+                          />
+                        )}
+                        {m.nota && <p className="text-[10px] text-[#A0A0A0] mt-2">{m.nota}</p>}
+                      </div>
+                    ))}
                   </div>
-                ))}
-                <p className="text-[10px] text-[#A0A0A0] text-center leading-relaxed">
-                  Transfiere el total exacto ({formatearCOP(total)}) y guarda tu comprobante — lo vas a adjuntar en el siguiente paso por WhatsApp.
-                </p>
+                </div>
+
+                {/* Paso 2: avisar con el comprobante — botón propio, pegado a la info de pago */}
+                <div className="pt-1 border-t border-dashed border-[#E5E0D5]">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#B89250] mt-3 mb-2">
+                    Paso 2 · Envía tu comprobante
+                  </p>
+                  <p className="text-xs text-[#5A5A5A] mb-3">
+                    Ya que hayas transferido, toca el botón — se abre WhatsApp con tu pedido ya escrito, y ahí mismo adjuntas la foto o captura del comprobante para que {METODOS_PAGO[0]?.titular.split(" ")[0] || "nosotros"} confirme tu pago y el envío.
+                  </p>
+                  <button onClick={handleCheckout} className="w-full btn-gold py-4 rounded-sm font-medium tracking-wide text-sm flex items-center justify-center gap-2">
+                    <MessageCircle size={16} /> Ya pagué, enviar comprobante
+                  </button>
+                </div>
               </div>
+            ) : (
+              <>
+                <button onClick={handleCheckout} className="w-full btn-gold py-4 rounded-sm font-medium tracking-wide text-sm flex items-center justify-center gap-2">
+                  Finalizar pedido por WhatsApp
+                </button>
+                <p className="text-[10px] text-[#A0A0A0] text-center">
+                  Te abrimos WhatsApp con tu pedido ya escrito — solo confirmas y coordinamos el pago y el envío.
+                </p>
+              </>
             )}
 
-            {/* Totales */}
-            <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between text-[#5A5A5A]">
-                <span>Subtotal</span>
-                <span>{formatearCOP(subtotal)}</span>
-              </div>
-              {descuento > 0 && (
-                <div className="flex justify-between text-[#3A6B2A]">
-                  <span>Descuento</span>
-                  <span>-{formatearCOP(descuento)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-[#1A1A1A] font-semibold text-base pt-1.5 border-t border-[#E5E0D5]">
-                <span>Total</span>
-                <span>{formatearCOP(total)}</span>
-              </div>
-            </div>
-
             {/* Confianza */}
-            <div className="flex items-center justify-center gap-4 text-[10px] text-[#8A8A8A]">
+            <div className="flex items-center justify-center gap-4 text-[10px] text-[#8A8A8A] pt-1">
               <span className="flex items-center gap-1"><ShieldCheck size={12} className="text-[#C9A96E]" /> 100% originales</span>
               <span className="flex items-center gap-1"><Truck size={12} className="text-[#C9A96E]" /> Envíos a toda Colombia</span>
             </div>
-
-            <button onClick={handleCheckout} className="w-full btn-gold py-4 rounded-sm font-medium tracking-wide text-sm flex items-center justify-center gap-2">
-              {metodo === "transferencia" ? "Ya pagué, enviar comprobante" : "Finalizar pedido por WhatsApp"}
-            </button>
-            <p className="text-[10px] text-[#A0A0A0] text-center">
-              {metodo === "transferencia"
-                ? "Te abrimos WhatsApp con tu pedido — adjunta ahí la foto de tu comprobante de pago."
-                : "Te abrimos WhatsApp con tu pedido ya escrito — solo confirmas y coordinamos el pago y el envío."}
-            </p>
           </div>
         )}
       </div>
