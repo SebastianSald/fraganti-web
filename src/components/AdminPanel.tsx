@@ -11,6 +11,7 @@ import {
 
 import { loadCupones, crearCupon, actualizarCupon, eliminarCupon, type Cupon, type TipoCupon } from "../data/cupones";
 import { loadResenas, crearResena, actualizarResena, eliminarResena, type Resena } from "../data/resenas";
+import { loadPedidos, actualizarEstadoPedido, ESTADO_LABELS, type Pedido, type EstadoPedido } from "../data/pedidos";
 
 // ============================================================================
 // Panel de administración — /admin
@@ -593,6 +594,89 @@ function CuponForm({ onCreated }: { onCreated: (c: Cupon) => void }) {
   );
 }
 
+const ESTADO_COLORES: Record<EstadoPedido, string> = {
+  pendiente: "bg-[#F0EEE9] text-[#5A5A5A]",
+  pago_reportado: "bg-[#FBF0DC] text-[#B89250]",
+  confirmado: "bg-[#EAF5E4] text-[#3A6B2A]",
+  enviado: "bg-[#E4EEF7] text-[#2A5A8A]",
+  cancelado: "bg-red-50 text-red-600",
+};
+
+function PedidosPanel() {
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPedidos().then(setPedidos).catch((e) => setError(e.message)).finally(() => setLoading(false));
+  }, []);
+
+  const cambiarEstado = async (id: number, estado: EstadoPedido) => {
+    const previo = pedidos;
+    setPedidos((prev) => prev.map((p) => (p.id === id ? { ...p, estado } : p)));
+    try {
+      await actualizarEstadoPedido(id, estado);
+    } catch (e: any) {
+      setError(e.message);
+      setPedidos(previo); // revertir si falla
+    }
+  };
+
+  return (
+    <div>
+      <p className="text-xs text-[#A0A0A0] mb-5">
+        Pedidos que llegan desde el carrito de la tienda (respaldo aparte del mensaje de WhatsApp).
+        Cámbiales el estado a medida que los vayas gestionando.
+      </p>
+
+      {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+      {loading && <p className="text-[#5A5A5A] text-sm">Cargando pedidos...</p>}
+
+      {!loading && pedidos.length === 0 && (
+        <p className="text-center text-[#A0A0A0] py-10 text-sm">Todavía no ha llegado ningún pedido por aquí.</p>
+      )}
+
+      <div className="space-y-3">
+        {pedidos.map((p) => (
+          <div key={p.id} className="bg-white border border-[#E5E0D5] rounded-lg p-4">
+            <div className="flex items-start justify-between mb-2 gap-3">
+              <div>
+                <span className="font-mono text-sm font-semibold text-[#1A1A1A]">{p.referencia}</span>
+                <p className="text-[10px] text-[#A0A0A0] mt-0.5">
+                  {new Date(p.creadoEn).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" })}
+                  {" · "}{p.metodo === "transferencia" ? (p.metodoPagoNombre || "Transferencia / QR") : "WhatsApp"}
+                </p>
+              </div>
+              <select
+                value={p.estado}
+                onChange={(e) => cambiarEstado(p.id, e.target.value as EstadoPedido)}
+                className={`text-[11px] font-medium rounded-full px-3 py-1 border-none outline-none cursor-pointer ${ESTADO_COLORES[p.estado]}`}
+              >
+                {(Object.keys(ESTADO_LABELS) as EstadoPedido[]).map((k) => (
+                  <option key={k} value={k}>{ESTADO_LABELS[k]}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="text-xs text-[#5A5A5A] space-y-0.5 mb-2">
+              {p.items.map((it, idx) => (
+                <p key={idx}>{it.nombre} · {it.label} x{it.cantidad}</p>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-[#F0EEE9]">
+              {p.cuponCodigo && <span className="text-[10px] text-[#A0A0A0]">Cupón {p.cuponCodigo}</span>}
+              <span className="ml-auto text-sm font-semibold text-[#1A1A1A]">
+                {new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(p.total)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CuponesPanel() {
   const [cupones, setCupones] = useState<Cupon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -797,7 +881,7 @@ function ResenasPanel() {
 }
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
-  const [tab, setTab] = useState<"perfumes" | "cupones" | "resenas">("perfumes");
+  const [tab, setTab] = useState<"perfumes" | "pedidos" | "cupones" | "resenas">("perfumes");
   const [perfumes, setPerfumes] = useState<Perfume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -850,6 +934,12 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             Perfumes
           </button>
           <button
+            onClick={() => setTab("pedidos")}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-colors ${tab === "pedidos" ? "bg-[#C9A96E] text-[#1A1A1A]" : "text-[#A0A0A0] hover:text-white"}`}
+          >
+            Pedidos
+          </button>
+          <button
             onClick={() => setTab("cupones")}
             className={`px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-colors ${tab === "cupones" ? "bg-[#C9A96E] text-[#1A1A1A]" : "text-[#A0A0A0] hover:text-white"}`}
           >
@@ -869,6 +959,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           <CuponesPanel />
         ) : tab === "resenas" ? (
           <ResenasPanel />
+        ) : tab === "pedidos" ? (
+          <PedidosPanel />
         ) : (
           <>
             <div className="relative mb-6">

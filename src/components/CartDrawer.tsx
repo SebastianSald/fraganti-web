@@ -3,6 +3,7 @@ import { X, Minus, Plus, Trash2, ShoppingBag, Tag, Copy, Check, ShieldCheck, Tru
 import { useCart, formatearCOP } from "../context/CartContext";
 import { resolverImagen } from "../data/perfumes";
 import { METODOS_PAGO } from "../data/pagos";
+import { crearPedido } from "../data/pedidos";
 
 type MetodoCheckout = "whatsapp" | "transferencia";
 
@@ -33,18 +34,20 @@ function construirMensajeWhatsApp(
   referencia: string
 ): string {
   const lineas = items.map(
-    (i) => `• ${i.nombre} (${i.label}) x${i.cantidad} — ${formatearCOP(i.precioUnitario * i.cantidad)}`
+    (i) => `*${i.nombre}*\n${i.label} — ${formatearCOP(i.precioUnitario * i.cantidad)}${i.cantidad > 1 ? ` (x${i.cantidad})` : ""}`
   );
 
-  let mensaje = `Hola FRAGANTI 👋 quiero hacer este pedido (Ref. ${referencia}):\n\n${lineas.join("\n")}\n\nSubtotal: ${formatearCOP(subtotal)}`;
+  const divisor = "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄";
+
+  let mensaje = `🤍 *FRAGANTI* — Nuevo pedido\nRef. *${referencia}*\n\n${lineas.join("\n\n")}\n\n${divisor}\nSubtotal: ${formatearCOP(subtotal)}`;
 
   if (cuponCodigo && descuento > 0) {
     mensaje += `\nCupón ${cuponCodigo.toUpperCase()}: -${formatearCOP(descuento)}`;
   }
 
-  mensaje += `\nTotal: ${formatearCOP(total)}\n\n`;
+  mensaje += `\n*Total: ${formatearCOP(total)}*\n${divisor}\n\n`;
   mensaje += metodo === "transferencia"
-    ? "Ya hice el pago por transferencia — les adjunto el comprobante en este chat. Quedo atento(a) para coordinar el envío. ¡Gracias!"
+    ? "Ya realicé el pago por transferencia ✓ — adjunto el comprobante en este chat.\nQuedo atento(a) para coordinar el envío. ¡Gracias!"
     : "Quedo atento(a) para coordinar el pago y el envío. ¡Gracias!";
   return mensaje;
 }
@@ -81,6 +84,18 @@ export function CartDrawer({ isOpen, onClose, whatsappNumber }: CartDrawerProps)
     const mensaje = construirMensajeWhatsApp(items, subtotal, cupon?.codigo, descuento, total, metodo, referencia);
     const url = `https://wa.me/${numeroLimpio}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, "_blank", "noopener,noreferrer");
+
+    // Se guarda en segundo plano — si falla, no interrumpe el checkout (el pedido ya se envió por WhatsApp).
+    crearPedido({
+      referencia,
+      items: items.map((i) => ({ nombre: i.nombre, label: i.label, cantidad: i.cantidad, precioUnitario: i.precioUnitario })),
+      subtotal,
+      descuento,
+      total,
+      metodo,
+      metodoPagoNombre: metodo === "transferencia" ? "Transferencia / QR" : undefined,
+      cuponCodigo: cupon?.codigo,
+    });
   };
 
   return (
