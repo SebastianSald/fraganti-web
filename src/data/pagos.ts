@@ -59,7 +59,7 @@ export const METODOS_PAGO: MetodoPago[] = [
     nombre: "Llave Bre-B",
     titular: "Juan Saldarriaga",
     numero: "0093130967",
-    // qrImagen: "qr-breb.png", // sube la imagen a public/images/ y descomenta esta línea con el nombre exacto del archivo
+    qrImagen: "QR.jpg", // sube la imagen a public/images/ y descomenta esta línea con el nombre exacto del archivo
     nota: "Bre-B es el nuevo sistema de pagos inmediatos entre bancos y billeteras — puedes usar esta llave desde cualquier entidad compatible.",
   },
 ];
