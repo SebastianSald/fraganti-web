@@ -121,6 +121,28 @@ function FadeIn({ children, delay = 0, className = "", direction = "up" }: { chi
   );
 }
 
+/**
+ * El "hilo dorado": una línea fina + un nodo circular (el mismo motivo del anillo
+ * del logo) que marca el inicio de cada sección grande de la página. Cada instancia
+ * dibuja la línea a lo largo de TODA su propia sección (top-0 bottom-0); como las
+ * secciones están apiladas sin espacio entre ellas, el resultado visual es una sola
+ * línea continua bajando por toda la página. Requiere que la sección que la contiene
+ * tenga className="relative". Solo se ve en escritorio — en celular no hay margen
+ * cómodo para un elemento puramente decorativo.
+ */
+function HiloSeccion({ label, tono = "claro" }: { label: string; tono?: "claro" | "oscuro" }) {
+  const oscuro = tono === "oscuro";
+  return (
+    <div className="hidden md:block" aria-hidden="true">
+      <div className={`absolute left-6 lg:left-10 top-0 bottom-0 w-px pointer-events-none ${oscuro ? "bg-[#C9A96E]/50" : "bg-[#C9A96E]/40"}`}></div>
+      <div className={`absolute left-6 lg:left-10 top-24 -translate-x-1/2 w-3.5 h-3.5 rounded-full border-2 border-[#C9A96E] pointer-events-none ${oscuro ? "bg-[#1A1A1A]" : "bg-[#F8F5F2]"}`}></div>
+      <span className={`absolute left-[38px] lg:left-[54px] top-[86px] whitespace-nowrap text-[10px] font-sans font-semibold tracking-[0.14em] uppercase pointer-events-none ${oscuro ? "text-[#C9A96E]" : "text-[#B89250]"}`}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
 // Tarjeta de producto individual — maneja su propia variante seleccionada
 // (un tamaño de frasco completo, o un decant) y refleja el stock de cada una.
 function ProductCard({
@@ -855,7 +877,8 @@ export function Landing() {
       </section>
 
       {/* COLECCIÓN DE PERFUMES */}
-      <section id="coleccion" className="py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#F8F5F2]">
+      <section id="coleccion" className="relative py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#F8F5F2]">
+        <HiloSeccion label="Colección" tono="claro" />
         <FadeIn>
           <div className="flex flex-col items-center mb-12">
             <h2 className="font-serif text-4xl md:text-5xl text-[#1A1A1A] mb-4 text-center">Nuestra Colección</h2>
@@ -1122,7 +1145,8 @@ export function Landing() {
       </section>
 
       {/* TEST DE PERSONALIDAD OLFATIVA */}
-      <section id="test" className="py-24 px-6 bg-[#F5F5DC]/40 border-y border-[#E5E0D5]">
+      <section id="test" className="relative py-24 px-6 bg-[#F5F5DC]/40 border-y border-[#E5E0D5]">
+        <HiloSeccion label="Test olfativo" tono="claro" />
         <div className="max-w-4xl mx-auto">
           <FadeIn>
             <div className="text-center mb-12">
@@ -1230,6 +1254,7 @@ export function Landing() {
 
       {/* DECANTS SECTION — ahora con más protagonismo gráfico, ya que absorbe el espacio que dejó "Experiencia Sensorial" */}
       <section id="decants" className="relative py-28 md:py-36 overflow-hidden bg-[#1A1A1A]">
+        <HiloSeccion label="Decants" tono="oscuro" />
         <div className="absolute inset-0">
           <img
             src="/images/fraganti-decants.jpg"
@@ -1334,7 +1359,8 @@ export function Landing() {
       </section>
 
       {/* CONTACTO Y UBICACIÓN */}
-      <section id="contacto" className="py-24 px-6 lg:px-12 max-w-7xl mx-auto">
+      <section id="contacto" className="relative py-24 px-6 lg:px-12 max-w-7xl mx-auto">
+        <HiloSeccion label="Contacto" tono="claro" />
         <FadeIn>
           <div className="text-center mb-16">
             <h2 className="font-serif text-4xl md:text-5xl text-[#1A1A1A] mb-4">Estamos para asesorarte</h2>
@@ -1440,7 +1466,8 @@ export function Landing() {
 
       {/* RESEÑAS DE GOOGLE */}
       {RESENAS.length > 0 && (
-        <section className="py-24 px-6 lg:px-12 max-w-7xl mx-auto">
+        <section className="relative py-24 px-6 lg:px-12 max-w-7xl mx-auto">
+          <HiloSeccion label="Reseñas" tono="claro" />
           <FadeIn>
             <div className="text-center mb-12">
               <span className="text-[#C9A96E] text-sm font-semibold tracking-widest uppercase mb-3 block">Lo que dicen de nosotros</span>
