@@ -12,6 +12,7 @@ body,
 }
 
 body {
+  background: #F8F5F2;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

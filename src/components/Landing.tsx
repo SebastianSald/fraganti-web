@@ -121,28 +121,6 @@ function FadeIn({ children, delay = 0, className = "", direction = "up" }: { chi
   );
 }
 
-/**
- * El "hilo dorado": una línea fina + un nodo circular (el mismo motivo del anillo
- * del logo) que marca el inicio de cada sección grande de la página. Cada instancia
- * dibuja la línea a lo largo de TODA su propia sección (top-0 bottom-0); como las
- * secciones están apiladas sin espacio entre ellas, el resultado visual es una sola
- * línea continua bajando por toda la página. Requiere que la sección que la contiene
- * tenga className="relative". Solo se ve en escritorio — en celular no hay margen
- * cómodo para un elemento puramente decorativo.
- */
-function HiloSeccion({ label, tono = "claro" }: { label: string; tono?: "claro" | "oscuro" }) {
-  const oscuro = tono === "oscuro";
-  return (
-    <div className="hidden md:block" aria-hidden="true">
-      <div className={`absolute left-6 lg:left-10 top-0 bottom-0 w-px pointer-events-none ${oscuro ? "bg-[#C9A96E]/50" : "bg-[#C9A96E]/40"}`}></div>
-      <div className={`absolute left-6 lg:left-10 top-24 -translate-x-1/2 w-3.5 h-3.5 rounded-full border-2 border-[#C9A96E] pointer-events-none ${oscuro ? "bg-[#1A1A1A]" : "bg-[#F8F5F2]"}`}></div>
-      <span className={`absolute left-[38px] lg:left-[54px] top-[86px] whitespace-nowrap text-[10px] font-sans font-semibold tracking-[0.14em] uppercase pointer-events-none ${oscuro ? "text-[#C9A96E]" : "text-[#B89250]"}`}>
-        {label}
-      </span>
-    </div>
-  );
-}
-
 // Tarjeta de producto individual — maneja su propia variante seleccionada
 // (un tamaño de frasco completo, o un decant) y refleja el stock de cada una.
 function ProductCard({
@@ -834,6 +812,8 @@ export function Landing() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a1a]/70 via-[#1a1a1a]/50 to-[#1a1a1a]/90"></div>
           {/* Noise texture overlay */}
           <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}></div>
+          {/* Transición suave hacia el tono hueso de la siguiente sección, en vez de un corte duro */}
+          <div className="absolute bottom-0 inset-x-0 h-28 md:h-40 bg-gradient-to-b from-transparent to-[#F8F5F2]/70"></div>
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl mx-auto mt-20">
@@ -877,8 +857,7 @@ export function Landing() {
       </section>
 
       {/* COLECCIÓN DE PERFUMES */}
-      <section id="coleccion" className="relative py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#F8F5F2]">
-        <HiloSeccion label="Colección" tono="claro" />
+      <section id="coleccion" className="py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#F8F5F2]">
         <FadeIn>
           <div className="flex flex-col items-center mb-12">
             <h2 className="font-serif text-4xl md:text-5xl text-[#1A1A1A] mb-4 text-center">Nuestra Colección</h2>
@@ -1145,8 +1124,7 @@ export function Landing() {
       </section>
 
       {/* TEST DE PERSONALIDAD OLFATIVA */}
-      <section id="test" className="relative py-24 px-6 bg-[#F5F5DC]/40 border-y border-[#E5E0D5]">
-        <HiloSeccion label="Test olfativo" tono="claro" />
+      <section id="test" className="py-24 px-6 bg-[#F8F5F2]">
         <div className="max-w-4xl mx-auto">
           <FadeIn>
             <div className="text-center mb-12">
@@ -1254,7 +1232,6 @@ export function Landing() {
 
       {/* DECANTS SECTION — ahora con más protagonismo gráfico, ya que absorbe el espacio que dejó "Experiencia Sensorial" */}
       <section id="decants" className="relative py-28 md:py-36 overflow-hidden bg-[#1A1A1A]">
-        <HiloSeccion label="Decants" tono="oscuro" />
         <div className="absolute inset-0">
           <img
             src="/images/fraganti-decants.jpg"
@@ -1263,6 +1240,9 @@ export function Landing() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-[#1A1A1A]/70 to-[#1A1A1A]/40"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A]/60 via-transparent to-[#1A1A1A]/60"></div>
+          {/* Transiciones suaves hacia el hueso de Test olfativo (arriba) y Contacto (abajo) */}
+          <div className="absolute top-0 inset-x-0 h-24 md:h-32 bg-gradient-to-b from-[#F8F5F2]/60 to-transparent"></div>
+          <div className="absolute bottom-0 inset-x-0 h-24 md:h-32 bg-gradient-to-t from-[#F8F5F2]/60 to-transparent"></div>
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 lg:px-12 text-center">
@@ -1359,8 +1339,7 @@ export function Landing() {
       </section>
 
       {/* CONTACTO Y UBICACIÓN */}
-      <section id="contacto" className="relative py-24 px-6 lg:px-12 max-w-7xl mx-auto">
-        <HiloSeccion label="Contacto" tono="claro" />
+      <section id="contacto" className="py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#F8F5F2]">
         <FadeIn>
           <div className="text-center mb-16">
             <h2 className="font-serif text-4xl md:text-5xl text-[#1A1A1A] mb-4">Estamos para asesorarte</h2>
@@ -1466,8 +1445,7 @@ export function Landing() {
 
       {/* RESEÑAS DE GOOGLE */}
       {RESENAS.length > 0 && (
-        <section className="relative py-24 px-6 lg:px-12 max-w-7xl mx-auto">
-          <HiloSeccion label="Reseñas" tono="claro" />
+        <section className="py-24 px-6 lg:px-12 max-w-7xl mx-auto bg-[#F8F5F2]">
           <FadeIn>
             <div className="text-center mb-12">
               <span className="text-[#C9A96E] text-sm font-semibold tracking-widest uppercase mb-3 block">Lo que dicen de nosotros</span>
